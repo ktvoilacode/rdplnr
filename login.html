@@ -379,16 +379,18 @@
         font-size: 12px;
     }
 
-    /* Responsive */
+    /* Responsive - Tablet */
     @media (max-width: 968px) {
         body {
             flex-direction: column;
             overflow: auto;
+            min-height: 100vh;
+            height: auto;
         }
 
         .left-panel {
-            padding: 40px 30px;
-            min-height: auto;
+            flex: none;
+            padding: 40px 30px 30px;
         }
 
         .left-panel::before,
@@ -398,10 +400,12 @@
 
         .logo-section h1 {
             font-size: 28px;
+            margin-bottom: 20px;
         }
 
         .content-section h2 {
-            font-size: 24px;
+            font-size: 22px;
+            margin-bottom: 10px;
         }
 
         .content-section p {
@@ -409,8 +413,21 @@
         }
 
         .features {
-            flex-direction: column;
-            gap: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .feature {
+            padding: 8px 12px;
+        }
+
+        .feature span {
+            font-size: 12px;
+        }
+
+        .feature span br {
+            display: none;
         }
 
         .preview-image {
@@ -418,6 +435,7 @@
         }
 
         .right-panel {
+            flex: none;
             padding: 40px 30px;
         }
 
@@ -435,17 +453,83 @@
         }
     }
 
-    @media (max-width: 480px) {
+    /* Responsive - Mobile */
+    @media (max-width: 640px) {
         .left-panel {
-            padding: 30px 20px;
+            padding: 28px 20px 20px;
         }
 
-        .right-panel {
-            padding: 30px 20px;
+        .logo-section h1 {
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        .logo-section .subtitle {
+            font-size: 11px;
+            letter-spacing: 2px;
+        }
+
+        .content-section h2 {
+            font-size: 20px;
+        }
+
+        .content-section p {
+            font-size: 13px;
         }
 
         .features {
-            margin-top: 20px;
+            flex-direction: row;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            gap: 8px;
+            margin-top: 16px;
+            padding-bottom: 4px;
+        }
+
+        .feature {
+            flex-shrink: 0;
+            padding: 8px 12px;
+        }
+
+        .right-panel {
+            padding: 28px 20px;
+        }
+
+        .login-header h2 {
+            font-size: 24px;
+        }
+
+        .login-header p {
+            font-size: 13px;
+        }
+
+        .input-wrapper input {
+            padding: 12px 42px 12px 42px;
+            font-size: 14px;
+        }
+
+        .login-btn {
+            padding: 13px;
+            font-size: 14px;
+        }
+    }
+
+    /* Responsive - Small phones */
+    @media (max-width: 380px) {
+        .left-panel {
+            padding: 24px 16px 16px;
+        }
+
+        .right-panel {
+            padding: 24px 16px;
+        }
+
+        .features {
+            display: none;
+        }
+
+        .login-header h2 {
+            font-size: 22px;
         }
     }
 </style>
