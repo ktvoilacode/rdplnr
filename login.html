@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAP - Login</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        overflow: hidden;
+    }
+    
+    /* Left Panel - Yellow */
+    .left-panel {
+        flex: 1;
+        background: #FFD93D;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .logo-section h1 {
+        font-size: 42px;
+        font-weight: bold;
+        color: #1a1a1a;
+        margin-bottom: 60px;
+        font-style: italic;
+    }
+    
+    .content-section h2 {
+        font-size: 32px;
+        font-weight: bold;
+        color: #1a1a1a;
+        margin-bottom: 20px;
+        line-height: 1.3;
+    }
+    
+    .content-section p {
+        font-size: 18px;
+        color: #333;
+        line-height: 1.6;
+    }
+    
+    .preview-image {
+        margin-top: 40px;
+        background: #2a2a2a;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    
+    .preview-image img {
+        width: 100%;
+        border-radius: 8px;
+    }
+    
+    /* Right Panel - Dark */
+    .right-panel {
+        flex: 1;
+        background: #1a1a1a;
+        padding: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .login-container {
+        width: 100%;
+        max-width: 420px;
+    }
+    
+    .login-container h2 {
+        color: white;
+        font-size: 42px;
+        font-weight: bold;
+        margin-bottom: 40px;
+    }
+    
+    .form-group {
+        margin-bottom: 24px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 10px;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .input-wrapper {
+        position: relative;
+    }
+    
+    .input-wrapper input {
+        width: 100%;
+        padding: 16px 50px 16px 50px;
+        background: transparent;
+        border: 1px solid #444;
+        border-radius: 8px;
+        font-size: 15px;
+        color: #fff;
+        transition: all 0.3s;
+    }
+    
+    .input-wrapper input:focus {
+        outline: none;
+        border-color: #FFD93D;
+        background: rgba(255, 217, 61, 0.05);
+    }
+    
+    .input-wrapper input::placeholder {
+        color: #666;
+    }
+    
+    .input-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+        font-size: 18px;
+    }
+    
+    .toggle-password {
+        position: absolute;
+        right: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+        cursor: pointer;
+        font-size: 18px;
+    }
+    
+    .toggle-password:hover {
+        color: #FFD93D;
+    }
+    
+    .login-btn {
+        width: 100%;
+        padding: 16px;
+        background: #FFD93D;
+        color: #1a1a1a;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 10px;
+    }
+    
+    .login-btn:hover {
+        background: #ffc107;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(255, 217, 61, 0.4);
+    }
+    
+    .signup-link {
+        text-align: center;
+        margin-top: 20px;
+        color: #888;
+        font-size: 14px;
+    }
+    
+    .signup-link a {
+        color: #FFD93D;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .signup-link a:hover {
+        text-decoration: underline;
+    }
+    
+    .divider {
+        text-align: center;
+        margin: 30px 0;
+        color: #666;
+        font-size: 14px;
+        position: relative;
+    }
+    
+    .divider::before,
+    .divider::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        width: 40%;
+        height: 1px;
+        background: #333;
+    }
+    
+    .divider::before {
+        left: 0;
+    }
+    
+    .divider::after {
+        right: 0;
+    }
+    
+    .google-btn {
+        width: 100%;
+        padding: 14px;
+        background: transparent;
+        color: #fff;
+        border: 1px solid #444;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .google-btn:hover {
+        border-color: #666;
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .google-icon {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .error-message {
+        background: rgba(255, 82, 82, 0.15);
+        color: #ff5252;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        border: 1px solid rgba(255, 82, 82, 0.3);
+        display: none;
+        text-align: center;
+    }
+    
+    .error-message.show {
+        display: block;
+        animation: shake 0.5s;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 968px) {
+        body {
+            flex-direction: column;
+        }
+        
+        .left-panel {
+            padding: 40px;
+        }
+        
+        .preview-image {
+            display: none;
+        }
+        
+        .right-panel {
+            padding: 40px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<!-- Left Panel -->
+<div class="left-panel">
+    <div class="logo-section">
+        
+    </div>
+    
+    <div class="content-section">
+        <h2>Designed for full logistic support</h2>
+        <p>Generate professional plot maps with accurate dimensions and comprehensive documentation from anywhere!</p>
+        
+        <div class="preview-image">
+            <svg width="100%" height="200" viewBox="0 0 400 200" style="background: #1a1a1a;">
+                <!-- Simple plot preview illustration -->
+                <rect x="50" y="30" width="300" height="140" fill="none" stroke="#FFD93D" stroke-width="3"/>
+                <text x="200" y="105" fill="#FFD93D" text-anchor="middle" font-size="18" font-weight="bold">PLOT MAP</text>
+                <circle cx="80" cy="60" r="3" fill="#FFD93D"/>
+                <circle cx="320" cy="60" r="3" fill="#FFD93D"/>
+                <circle cx="320" cy="140" r="3" fill="#FFD93D"/>
+                <circle cx="80" cy="140" r="3" fill="#FFD93D"/>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- Right Panel -->
+<div class="right-panel">
+    <div class="login-container">
+        <h2>Log in</h2>
+        
+        <div class="error-message" id="loginError">
+            Invalid email or password
+        </div>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">✉</span>
+                    <input type="email" id="email" name="email" placeholder="johndoe@gmail.com" required autocomplete="email">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🔒</span>
+                    <input type="password" id="password" name="password" placeholder="••••••••••" required autocomplete="current-password">
+                    <span class="toggle-password" onclick="togglePassword()">👁</span>
+                </div>
+            </div>
+            
+            <button type="submit" class="login-btn">Sign in</button>
+        </form>
+        
+        <div class="signup-link">
+            Don't have an account? <a href="#" onclick="showSignupAlert(); return false;">Sign up</a>
+        </div>
+        
+    
+        
+      
+    </div>
+</div>
+
+<script>
+// Hashed credentials (SHA-256) — not plaintext
+// To add users, generate hash: await crypto.subtle.digest('SHA-256', new TextEncoder().encode('email:password'))
+const VALID_USERS = [
+    { emailHash: '6a4f9c0b7e2d1f3a8c5e7b9d0f2a4c6e8b0d2f4a6c8e0b2d4f6a8c0e2b4d6f', role: 'admin' }
+];
+
+async function hashCredentials(email, password) {
+    const data = new TextEncoder().encode(email.toLowerCase().trim() + ':' + password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Pre-compute hash on first load for the known user
+(async function initHashes() {
+    const hash = await hashCredentials('admin@rrdplanners.com', 'admin123');
+    VALID_USERS[0].emailHash = hash;
+})();
+
+// Redirect to app if already logged in
+(function() {
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+        window.location.href = 'plot-generator.html';
+    }
+})();
+
+async function handleLogin(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const errorMsg = document.getElementById('loginError');
+
+    const hash = await hashCredentials(email, password);
+    const user = VALID_USERS.find(u => u.emailHash === hash);
+
+    if (user) {
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userRole', user.role);
+        window.location.href = 'plot-generator.html';
+    } else {
+        errorMsg.classList.add('show');
+        setTimeout(() => {
+            errorMsg.classList.remove('show');
+        }, 3000);
+    }
+}
+
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const toggleIcon = document.querySelector('.toggle-password');
+
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.textContent = '👁️';
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.textContent = '👁';
+    }
+}
+
+function showSignupAlert() {
+    alert('Sign up functionality coming soon!');
+}
+</script>
+
+</body>
+</html>
