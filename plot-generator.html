@@ -515,12 +515,36 @@
         display: inline-block;
     }
 
-    canvas {
+    #mapSvg {
         border: 2px solid #333;
         background: white;
         box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         border-radius: 4px;
         display: block;
+    }
+
+    #mapSvg text {
+        user-select: text;
+    }
+
+    #mapSvg text.editable:hover {
+        cursor: text;
+        fill: #0055aa;
+    }
+
+    /* Edit overlay for inline editing */
+    .svg-edit-overlay {
+        position: absolute;
+        z-index: 100;
+        background: white;
+        border: 2px solid #0066cc;
+        border-radius: 4px;
+        padding: 4px;
+        font-family: Arial, sans-serif;
+        resize: both;
+        overflow: auto;
+        min-width: 60px;
+        min-height: 20px;
     }
 
     /* Responsive - Tablet */
@@ -840,15 +864,24 @@
         </div>
     </div>
 
-    <!-- Canvas Container -->
+    <!-- SVG Container -->
     <div class="canvas-container">
         <div class="canvas-wrapper" id="canvasWrapper">
-            <canvas id="mapCanvas"></canvas>
+            <svg id="mapSvg" xmlns="http://www.w3.org/2000/svg"
+                 width="793" height="1122"
+                 viewBox="0 0 793 1122">
+                <g id="layer-border"></g>
+                <g id="layer-plot"></g>
+                <g id="layer-dimensions"></g>
+                <g id="layer-text"></g>
+            </svg>
         </div>
     </div>
 </div>
 
+<!-- jsPDF + svg2pdf.js for vector PDF export with selectable text -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.min.js"></script>
 
 <script>
 // ==================== AUTH GUARD ====================
@@ -911,20 +944,17 @@ function loadFormData() {
     try {
         var data = JSON.parse(raw);
 
-        // Mode
         if (data.mode === 'trapezoid') {
             document.getElementById('modeTrap').checked = true;
         } else {
             document.getElementById('modeRect').checked = true;
         }
 
-        // Dimensions
         var fields = ['n_ft','n_in','s_ft','s_in','e_ft','e_in','w_ft','w_in'];
         fields.forEach(function(id) {
             if (data[id] !== undefined) document.getElementById(id).value = data[id];
         });
 
-        // Text fields
         var textFields = ['road_direction','road_text','title','vendor','vendees',
             'north_txt','south_txt','east_txt','west_txt',
             'plot_center_txt','open_area_txt','plinth','wit1','wit2'];
@@ -932,12 +962,10 @@ function loadFormData() {
             if (data[id] !== undefined) document.getElementById(id).value = data[id];
         });
 
-        // Interior toggle
         if (data.showInterior !== undefined) {
             document.getElementById('showInterior').checked = data.showInterior;
         }
 
-        // Text sizes (clamped to allowed ranges)
         if (data.textSizes) {
             for (var key in data.textSizes) {
                 if (textSizes.hasOwnProperty(key)) {
@@ -954,7 +982,6 @@ function loadFormData() {
             }
         }
 
-        // Zoom
         if (data.zoom) {
             currentZoom = data.zoom;
             document.getElementById('zoom_value').textContent = currentZoom + '%';
@@ -993,19 +1020,45 @@ document.addEventListener('change', function() {
     scheduleDraw();
 });
 
-// ==================== CANVAS SETUP ====================
-var canvas = document.getElementById('mapCanvas');
-var ctx = canvas.getContext('2d');
-
-var SCALE_FACTOR = 3;
+// ==================== SVG SETUP ====================
+var SVG_NS = 'http://www.w3.org/2000/svg';
+var svg = document.getElementById('mapSvg');
 var A4_WIDTH = 793;
 var A4_HEIGHT = 1122;
 
-canvas.width = A4_WIDTH * SCALE_FACTOR;
-canvas.height = A4_HEIGHT * SCALE_FACTOR;
-canvas.style.width = A4_WIDTH + 'px';
-canvas.style.height = A4_HEIGHT + 'px';
-ctx.scale(SCALE_FACTOR, SCALE_FACTOR);
+// Layer references
+var layerBorder = document.getElementById('layer-border');
+var layerPlot = document.getElementById('layer-plot');
+var layerDimensions = document.getElementById('layer-dimensions');
+var layerText = document.getElementById('layer-text');
+
+function svgClear() {
+    [layerBorder, layerPlot, layerDimensions, layerText].forEach(function(g) {
+        while (g.firstChild) g.removeChild(g.firstChild);
+    });
+}
+
+function svgElem(tag, attrs, parent) {
+    var el = document.createElementNS(SVG_NS, tag);
+    for (var k in attrs) {
+        if (attrs.hasOwnProperty(k)) el.setAttribute(k, attrs[k]);
+    }
+    if (parent) parent.appendChild(el);
+    return el;
+}
+
+// Text measurement using temporary SVG text element
+function svgMeasureText(text, fontSize, fontWeight) {
+    var t = document.createElementNS(SVG_NS, 'text');
+    t.setAttribute('font-family', 'Arial, sans-serif');
+    t.setAttribute('font-size', fontSize);
+    if (fontWeight) t.setAttribute('font-weight', fontWeight);
+    t.textContent = text;
+    svg.appendChild(t);
+    var w = t.getBBox().width;
+    svg.removeChild(t);
+    return w;
+}
 
 // ==================== TEXT SIZES ====================
 var textSizes = {
@@ -1043,7 +1096,6 @@ function applyZoom() {
 
 // ==================== TEXT SIZE CONTROLS ====================
 function adjustSize(type, delta) {
-    // Title: min 12, max 18
     var min = 12, max = 18;
     textSizes[type] = Math.max(min, Math.min(max, textSizes[type] + delta));
     document.getElementById(type + '_size').textContent = textSizes[type] + 'px';
@@ -1052,13 +1104,11 @@ function adjustSize(type, delta) {
 }
 
 function adjustBodySize(delta) {
-    // Body text: min 10, max 14
     var min = 10, max = 14;
     var bodyTypes = ['vendor', 'dimensions', 'sidetext', 'plotcenter'];
     bodyTypes.forEach(function(type) {
         textSizes[type] = Math.max(min, Math.min(max, textSizes[type] + delta));
     });
-    // Display uses vendor size as representative
     document.getElementById('body_size').textContent = textSizes.vendor + 'px';
     scheduleSave();
     scheduleDraw();
@@ -1080,30 +1130,33 @@ function getMode() {
 }
 
 function syncRectangleFields() {
-    if (getMode() !== 'rectangle') return;
-    // North -> South sync
     document.getElementById('s_ft').value = document.getElementById('n_ft').value;
     document.getElementById('s_in').value = document.getElementById('n_in').value;
-    // East -> West sync
     document.getElementById('w_ft').value = document.getElementById('e_ft').value;
     document.getElementById('w_in').value = document.getElementById('e_in').value;
 }
 
 function updateModeUI() {
     var isRect = getMode() === 'rectangle';
-    document.getElementById('southRow').classList.toggle('synced', isRect);
-    document.getElementById('westRow').classList.toggle('synced', isRect);
-    var hint = document.getElementById('syncHint');
-    if (hint) hint.classList.toggle('visible', isRect);
+    var southRow = document.getElementById('southRow');
+    var westRow = document.getElementById('westRow');
+    var syncHint = document.getElementById('syncHint');
+
     if (isRect) {
+        southRow.classList.add('synced');
+        westRow.classList.add('synced');
+        syncHint.classList.add('visible');
         syncRectangleFields();
+    } else {
+        southRow.classList.remove('synced');
+        westRow.classList.remove('synced');
+        syncHint.classList.remove('visible');
     }
 }
 
 document.getElementById('modeRect').addEventListener('change', updateModeUI);
 document.getElementById('modeTrap').addEventListener('change', updateModeUI);
 
-// Sync on north/east input change in rectangle mode
 ['n_ft', 'n_in'].forEach(function(id) {
     document.getElementById(id).addEventListener('input', function() {
         if (getMode() === 'rectangle') {
@@ -1135,54 +1188,88 @@ function ftStr(v) {
     return f + "'-" + i + '"';
 }
 
-function wrapText(context, text, x, y, maxWidth, lineHeight) {
+// SVG word-wrap text helper
+// Returns the Y position after the last line
+function svgWrapText(layer, text, x, y, maxWidth, lineHeight, fontSize, opts) {
+    opts = opts || {};
+    var fw = opts.fontWeight || 'normal';
+    var anchor = opts.textAnchor || 'start';
+    var cls = opts.className || '';
+    var field = opts.dataField || '';
+
     var words = text.split(' ');
+    var lines = [];
     var line = '';
-    var yPos = y;
-    for (var idx = 0; idx < words.length; idx++) {
-        var testLine = line + words[idx] + ' ';
-        var metrics = context.measureText(testLine);
-        if (metrics.width > maxWidth && idx > 0) {
-            context.fillText(line.trim(), x, yPos);
-            line = words[idx] + ' ';
-            yPos += lineHeight;
+    for (var i = 0; i < words.length; i++) {
+        var test = line + (line ? ' ' : '') + words[i];
+        if (svgMeasureText(test, fontSize, fw) > maxWidth && line) {
+            lines.push(line);
+            line = words[i];
         } else {
-            line = testLine;
+            line = test;
         }
     }
-    context.fillText(line.trim(), x, yPos);
-    return yPos;
+    if (line) lines.push(line);
+
+    var textEl = svgElem('text', {
+        x: x, y: y,
+        'font-family': 'Arial, sans-serif',
+        'font-size': fontSize,
+        'font-weight': fw,
+        'text-anchor': anchor,
+        'dominant-baseline': 'auto',
+        fill: '#000'
+    }, layer);
+    if (cls) textEl.setAttribute('class', cls);
+    if (field) textEl.setAttribute('data-field', field);
+
+    for (var j = 0; j < lines.length; j++) {
+        var tspan = svgElem('tspan', {
+            x: x,
+            dy: j === 0 ? '0' : lineHeight
+        }, textEl);
+        tspan.textContent = lines[j];
+    }
+
+    return y + (lines.length - 1) * lineHeight;
+}
+
+// Simple single-line SVG text
+function svgText(layer, text, x, y, fontSize, opts) {
+    opts = opts || {};
+    var attrs = {
+        x: x, y: y,
+        'font-family': 'Arial, sans-serif',
+        'font-size': fontSize,
+        'font-weight': opts.fontWeight || 'normal',
+        'text-anchor': opts.textAnchor || 'start',
+        'dominant-baseline': opts.dominantBaseline || 'auto',
+        fill: opts.fill || '#000'
+    };
+    if (opts.transform) attrs.transform = opts.transform;
+    var el = svgElem('text', attrs, layer);
+    if (opts.className) el.setAttribute('class', opts.className);
+    if (opts.dataField) el.setAttribute('data-field', opts.dataField);
+    el.textContent = text;
+    return el;
 }
 
 // ==================== ROAD DIRECTION MAPPING ====================
-// Plot orientation is FIXED: North=top, South=bottom, West=left, East=right
-// Road direction only affects where the road indicator is drawn
-function getRoadMapping(roadDir) {
-    // Always: North=top, South=bottom, West=left, East=right
+function getRoadMapping() {
     return { bottom: 'S', top: 'N', left: 'W', right: 'E' };
 }
 
-// Returns which visual side the road is on
 function getRoadSide(roadDir) {
-    var sides = {
-        'south': 'bottom',
-        'north': 'top',
-        'east':  'right',
-        'west':  'left'
-    };
+    var sides = { 'south': 'bottom', 'north': 'top', 'east': 'right', 'west': 'left' };
     return sides[roadDir] || 'bottom';
 }
 
 function getDimForVisualSide(mapping, side, dims) {
-    // mapping side value is 'N','S','E','W'
-    // dims = { N, S, E, W }
-    var compass = mapping[side];
-    return dims[compass];
+    return dims[mapping[side]];
 }
 
 function getTextForVisualSide(mapping, side, texts) {
-    var compass = mapping[side];
-    return texts[compass];
+    return texts[mapping[side]];
 }
 
 // ==================== AREA CALCULATION ====================
@@ -1200,142 +1287,84 @@ function calculateArea(topWidth, bottomWidth, height, isRect) {
     };
 }
 
-// ==================== COMPASS ROSE ====================
-function drawCompass(cx, cy, size) {
-    ctx.save();
-    ctx.strokeStyle = '#000';
-    ctx.fillStyle = '#000';
-    ctx.lineWidth = 1;
-
+// ==================== COMPASS ROSE (SVG) ====================
+function drawCompass(layer, cx, cy, size) {
     // Circle
-    ctx.beginPath();
-    ctx.arc(cx, cy, size, 0, Math.PI * 2);
-    ctx.stroke();
-
+    svgElem('circle', { cx: cx, cy: cy, r: size, fill: 'none', stroke: '#000', 'stroke-width': 1 }, layer);
     // Cross lines
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - size + 2);
-    ctx.lineTo(cx, cy + size - 2);
-    ctx.moveTo(cx - size + 2, cy);
-    ctx.lineTo(cx + size - 2, cy);
-    ctx.stroke();
-
+    svgElem('line', { x1: cx, y1: cy - size + 2, x2: cx, y2: cy + size - 2, stroke: '#000', 'stroke-width': 1 }, layer);
+    svgElem('line', { x1: cx - size + 2, y1: cy, x2: cx + size - 2, y2: cy, stroke: '#000', 'stroke-width': 1 }, layer);
     // North arrow (filled triangle)
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - size + 1);
-    ctx.lineTo(cx - 3, cy - size + 9);
-    ctx.lineTo(cx + 3, cy - size + 9);
-    ctx.closePath();
-    ctx.fill();
-
+    var pts = (cx) + ',' + (cy - size + 1) + ' ' + (cx - 3) + ',' + (cy - size + 9) + ' ' + (cx + 3) + ',' + (cy - size + 9);
+    svgElem('polygon', { points: pts, fill: '#000' }, layer);
     // Labels
-    ctx.font = 'bold 6px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('N', cx, cy - size - 5);
-    ctx.fillText('S', cx, cy + size + 5);
-    ctx.fillText('E', cx + size + 5, cy);
-    ctx.fillText('W', cx - size - 5, cy);
-    ctx.restore();
+    svgText(layer, 'N', cx, cy - size - 3, 6, { fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'auto' });
+    svgText(layer, 'S', cx, cy + size + 7, 6, { fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'auto' });
+    svgText(layer, 'E', cx + size + 5, cy + 2, 6, { fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'auto' });
+    svgText(layer, 'W', cx - size - 5, cy + 2, 6, { fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'auto' });
 }
 
-// ==================== DIMENSION ENGINE ====================
-// Draws a proper dimension line between two points, offset outward
-// p1, p2: endpoints of the edge
-// offset: distance outward (positive = outward based on normalDir)
-// normalDir: {x, y} unit vector pointing outward from the plot
-// label: dimension text
+// ==================== DIMENSION ENGINE (SVG) ====================
 function drawDimensionLine(p1, p2, offset, normalDir, label) {
     var dimFontSize = textSizes.dimensions;
-    ctx.save();
-    ctx.strokeStyle = '#000';
-    ctx.fillStyle = '#000';
-    ctx.lineWidth = 0.6;
+    var layer = layerDimensions;
 
-    // Extension line endpoints (from corner outward)
+    // Extension line endpoints
     var extLen = offset + 10;
-    var e1Start = { x: p1.x + normalDir.x * 5, y: p1.y + normalDir.y * 5 };
-    var e1End   = { x: p1.x + normalDir.x * extLen, y: p1.y + normalDir.y * extLen };
-    var e2Start = { x: p2.x + normalDir.x * 5, y: p2.y + normalDir.y * 5 };
-    var e2End   = { x: p2.x + normalDir.x * extLen, y: p2.y + normalDir.y * extLen };
+    var e1s = { x: p1.x + normalDir.x * 5, y: p1.y + normalDir.y * 5 };
+    var e1e = { x: p1.x + normalDir.x * extLen, y: p1.y + normalDir.y * extLen };
+    var e2s = { x: p2.x + normalDir.x * 5, y: p2.y + normalDir.y * 5 };
+    var e2e = { x: p2.x + normalDir.x * extLen, y: p2.y + normalDir.y * extLen };
 
-    // Draw extension lines
-    ctx.beginPath();
-    ctx.moveTo(e1Start.x, e1Start.y);
-    ctx.lineTo(e1End.x, e1End.y);
-    ctx.moveTo(e2Start.x, e2Start.y);
-    ctx.lineTo(e2End.x, e2End.y);
-    ctx.stroke();
+    // Extension lines
+    svgElem('line', { x1: e1s.x, y1: e1s.y, x2: e1e.x, y2: e1e.y, stroke: '#000', 'stroke-width': 0.6 }, layer);
+    svgElem('line', { x1: e2s.x, y1: e2s.y, x2: e2e.x, y2: e2e.y, stroke: '#000', 'stroke-width': 0.6 }, layer);
 
-    // Dimension line (parallel to edge, at offset distance)
+    // Dimension line
     var d1 = { x: p1.x + normalDir.x * offset, y: p1.y + normalDir.y * offset };
     var d2 = { x: p2.x + normalDir.x * offset, y: p2.y + normalDir.y * offset };
-
-    ctx.beginPath();
-    ctx.moveTo(d1.x, d1.y);
-    ctx.lineTo(d2.x, d2.y);
-    ctx.stroke();
+    svgElem('line', { x1: d1.x, y1: d1.y, x2: d2.x, y2: d2.y, stroke: '#000', 'stroke-width': 0.6 }, layer);
 
     // Arrow heads
     var arrowLen = 4;
     var dx = d2.x - d1.x;
     var dy = d2.y - d1.y;
     var len = Math.sqrt(dx * dx + dy * dy);
-    if (len === 0) { ctx.restore(); return; }
-    var ux = dx / len;
-    var uy = dy / len;
-    // Perpendicular
-    var px = -uy;
-    var py = ux;
+    if (len === 0) return;
+    var ux = dx / len, uy = dy / len;
+    var px = -uy, py = ux;
 
-    // Arrow at d1 (pointing toward d1 from d2 direction)
-    ctx.beginPath();
-    ctx.moveTo(d1.x, d1.y);
-    ctx.lineTo(d1.x + ux * arrowLen + px * 1.5, d1.y + uy * arrowLen + py * 1.5);
-    ctx.moveTo(d1.x, d1.y);
-    ctx.lineTo(d1.x + ux * arrowLen - px * 1.5, d1.y + uy * arrowLen - py * 1.5);
-    ctx.stroke();
+    // Arrow at d1
+    var a1 = (d1.x) + ',' + (d1.y) + ' ' +
+        (d1.x + ux * arrowLen + px * 1.5) + ',' + (d1.y + uy * arrowLen + py * 1.5) + ' ' +
+        (d1.x + ux * arrowLen - px * 1.5) + ',' + (d1.y + uy * arrowLen - py * 1.5);
+    svgElem('polygon', { points: a1, fill: '#000' }, layer);
 
-    // Arrow at d2 (pointing toward d2 from d1 direction)
-    ctx.beginPath();
-    ctx.moveTo(d2.x, d2.y);
-    ctx.lineTo(d2.x - ux * arrowLen + px * 1.5, d2.y - uy * arrowLen + py * 1.5);
-    ctx.moveTo(d2.x, d2.y);
-    ctx.lineTo(d2.x - ux * arrowLen - px * 1.5, d2.y - uy * arrowLen - py * 1.5);
-    ctx.stroke();
+    // Arrow at d2
+    var a2 = (d2.x) + ',' + (d2.y) + ' ' +
+        (d2.x - ux * arrowLen + px * 1.5) + ',' + (d2.y - uy * arrowLen + py * 1.5) + ' ' +
+        (d2.x - ux * arrowLen - px * 1.5) + ',' + (d2.y - uy * arrowLen - py * 1.5);
+    svgElem('polygon', { points: a2, fill: '#000' }, layer);
 
-    // Dimension text centered on the dimension line
+    // Dimension text centered on line
     var midX = (d1.x + d2.x) / 2;
     var midY = (d1.y + d2.y) / 2;
-    var angle = Math.atan2(dy, dx);
+    var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    // Ensure readable (not upside down)
+    if (angle > 90 || angle < -90) angle += 180;
 
-    ctx.save();
-    ctx.translate(midX, midY);
-    // Ensure text is readable (not upside down)
-    if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
-        ctx.rotate(angle + Math.PI);
-    } else {
-        ctx.rotate(angle);
-    }
-    ctx.font = 'bold ' + dimFontSize + 'px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.fillText(label, 0, -4);
-    ctx.restore();
-
-    ctx.restore();
+    svgText(layer, label, 0, -4, dimFontSize, {
+        fontWeight: 'bold',
+        textAnchor: 'middle',
+        dominantBaseline: 'auto',
+        transform: 'translate(' + midX + ',' + midY + ') rotate(' + angle + ')'
+    });
 }
 
-// ==================== DRAW SIDE TEXT ====================
-// Draws text along a side, offset outward, with word-wrap for long text
-// Returns the number of lines rendered (for calculating road indicator offset)
+// ==================== DRAW SIDE TEXT (SVG) ====================
 function drawSideText(p1, p2, offset, normalDir, text, fontSize) {
     if (!text) return 1;
-    ctx.save();
-    ctx.fillStyle = '#000';
-    ctx.font = fontSize + 'px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    var layer = layerText;
 
     var midX = (p1.x + p2.x) / 2 + normalDir.x * offset;
     var midY = (p1.y + p2.y) / 2 + normalDir.y * offset;
@@ -1343,192 +1372,127 @@ function drawSideText(p1, p2, offset, normalDir, text, fontSize) {
     var dx = p2.x - p1.x;
     var dy = p2.y - p1.y;
     var edgeLen = Math.sqrt(dx * dx + dy * dy);
-    var angle = Math.atan2(dy, dx);
+    var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    if (angle > 90 || angle < -90) angle += 180;
 
-    ctx.translate(midX, midY);
-    if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
-        ctx.rotate(angle + Math.PI);
-    } else {
-        ctx.rotate(angle);
-    }
-
-    // Word-wrap text if it exceeds the edge length
+    // Word-wrap
     var maxWidth = edgeLen * 0.9;
-    var textWidth = ctx.measureText(text).width;
-    var lineCount = 1;
-
-    if (textWidth <= maxWidth) {
-        ctx.fillText(text, 0, 0);
-    } else {
-        // Split into lines
-        var words = text.split(' ');
-        var lines = [];
-        var line = '';
-        for (var i = 0; i < words.length; i++) {
-            var test = line + (line ? ' ' : '') + words[i];
-            if (ctx.measureText(test).width > maxWidth && line) {
-                lines.push(line);
-                line = words[i];
-            } else {
-                line = test;
-            }
-        }
-        if (line) lines.push(line);
-
-        lineCount = lines.length;
-        var lineH = fontSize + 2;
-        var startY = -(lines.length - 1) * lineH / 2;
-        for (var j = 0; j < lines.length; j++) {
-            ctx.fillText(lines[j], 0, startY + j * lineH);
+    var words = text.split(' ');
+    var lines = [];
+    var line = '';
+    for (var i = 0; i < words.length; i++) {
+        var test = line + (line ? ' ' : '') + words[i];
+        if (svgMeasureText(test, fontSize) > maxWidth && line) {
+            lines.push(line);
+            line = words[i];
+        } else {
+            line = test;
         }
     }
-    ctx.restore();
-    return lineCount;
+    if (line) lines.push(line);
+
+    var lineH = fontSize + 2;
+    var startY = -(lines.length - 1) * lineH / 2;
+
+    var g = svgElem('g', {
+        transform: 'translate(' + midX + ',' + midY + ') rotate(' + angle + ')'
+    }, layer);
+
+    for (var j = 0; j < lines.length; j++) {
+        svgText(g, lines[j], 0, startY + j * lineH, fontSize, {
+            textAnchor: 'middle',
+            dominantBaseline: 'middle'
+        });
+    }
+
+    return lines.length;
 }
 
-// Helper: count how many lines a side text would wrap into (without drawing)
+// Count side text lines (for road offset calculation)
 function countSideTextLines(p1, p2, text, fontSize) {
     if (!text) return 1;
-    ctx.save();
-    ctx.font = fontSize + 'px Arial';
     var dx = p2.x - p1.x;
     var dy = p2.y - p1.y;
     var edgeLen = Math.sqrt(dx * dx + dy * dy);
     var maxWidth = edgeLen * 0.9;
-    var textWidth = ctx.measureText(text).width;
-    var lineCount = 1;
-    if (textWidth > maxWidth) {
-        var words = text.split(' ');
-        var lines = [];
-        var line = '';
-        for (var i = 0; i < words.length; i++) {
-            var test = line + (line ? ' ' : '') + words[i];
-            if (ctx.measureText(test).width > maxWidth && line) {
-                lines.push(line);
-                line = words[i];
-            } else {
-                line = test;
-            }
+    var words = text.split(' ');
+    var lines = [];
+    var line = '';
+    for (var i = 0; i < words.length; i++) {
+        var test = line + (line ? ' ' : '') + words[i];
+        if (svgMeasureText(test, fontSize) > maxWidth && line) {
+            lines.push(line);
+            line = words[i];
+        } else {
+            line = test;
         }
-        if (line) lines.push(line);
-        lineCount = lines.length;
     }
-    ctx.restore();
-    return lineCount;
+    if (line) lines.push(line);
+    return lines.length;
 }
 
-// ==================== ROAD INDICATOR ====================
-// Draws road text and arrows on the specified side of the plot
-// roadOffset: precomputed distance from edge midpoint, clears dim lines + side text
+// ==================== ROAD INDICATOR (SVG) ====================
 function drawRoadIndicator(p1, p2, roadText, side, roadOffset) {
-    ctx.save();
-    ctx.strokeStyle = '#000';
-    ctx.fillStyle = '#000';
-    ctx.lineWidth = 0.8;
-
+    var layer = layerText;
+    var fs = textSizes.sidetext;
     var midX = (p1.x + p2.x) / 2;
     var midY = (p1.y + p2.y) / 2;
-    var fs = textSizes.sidetext;
 
     if (side === 'bottom' || side === 'top') {
-        // Horizontal road indicator
         var roadY = side === 'bottom' ? midY + roadOffset : midY - roadOffset;
 
-        ctx.font = 'bold ' + fs + 'px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(roadText.toUpperCase(), midX, roadY);
+        svgText(layer, roadText.toUpperCase(), midX, roadY, fs, {
+            fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle'
+        });
 
         var lineWidth = Math.min(Math.abs(p2.x - p1.x) * 0.6, 120);
         var lineY = side === 'bottom' ? roadY + 8 : roadY - 8;
         var lx1 = midX - lineWidth / 2;
         var lx2 = midX + lineWidth / 2;
 
-        ctx.beginPath();
-        ctx.moveTo(lx1, lineY);
-        ctx.lineTo(lx2, lineY);
-        ctx.stroke();
-
+        svgElem('line', { x1: lx1, y1: lineY, x2: lx2, y2: lineY, stroke: '#000', 'stroke-width': 0.8 }, layer);
         // Left arrow
-        ctx.beginPath();
-        ctx.moveTo(lx1, lineY);
-        ctx.lineTo(lx1 + 5, lineY - 2.5);
-        ctx.moveTo(lx1, lineY);
-        ctx.lineTo(lx1 + 5, lineY + 2.5);
-        ctx.stroke();
-
+        svgElem('line', { x1: lx1, y1: lineY, x2: lx1 + 5, y2: lineY - 2.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
+        svgElem('line', { x1: lx1, y1: lineY, x2: lx1 + 5, y2: lineY + 2.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
         // Right arrow
-        ctx.beginPath();
-        ctx.moveTo(lx2, lineY);
-        ctx.lineTo(lx2 - 5, lineY - 2.5);
-        ctx.moveTo(lx2, lineY);
-        ctx.lineTo(lx2 - 5, lineY + 2.5);
-        ctx.stroke();
+        svgElem('line', { x1: lx2, y1: lineY, x2: lx2 - 5, y2: lineY - 2.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
+        svgElem('line', { x1: lx2, y1: lineY, x2: lx2 - 5, y2: lineY + 2.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
     } else {
-        // Vertical road indicator (left or right side)
         var roadX = side === 'left' ? midX - roadOffset : midX + roadOffset;
 
-        ctx.font = 'bold ' + fs + 'px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // Draw text rotated vertically
-        ctx.save();
-        ctx.translate(roadX, midY);
-        ctx.rotate(-Math.PI / 2);
-        ctx.fillText(roadText.toUpperCase(), 0, 0);
-        ctx.restore();
+        svgText(layer, roadText.toUpperCase(), 0, 0, fs, {
+            fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle',
+            transform: 'translate(' + roadX + ',' + midY + ') rotate(-90)'
+        });
 
         var lineLen = Math.min(Math.abs(p2.y - p1.y) * 0.6, 120);
         var lineX = side === 'left' ? roadX - 8 : roadX + 8;
         var ly1 = midY - lineLen / 2;
         var ly2 = midY + lineLen / 2;
 
-        ctx.beginPath();
-        ctx.moveTo(lineX, ly1);
-        ctx.lineTo(lineX, ly2);
-        ctx.stroke();
-
+        svgElem('line', { x1: lineX, y1: ly1, x2: lineX, y2: ly2, stroke: '#000', 'stroke-width': 0.8 }, layer);
         // Top arrow
-        ctx.beginPath();
-        ctx.moveTo(lineX, ly1);
-        ctx.lineTo(lineX - 2.5, ly1 + 5);
-        ctx.moveTo(lineX, ly1);
-        ctx.lineTo(lineX + 2.5, ly1 + 5);
-        ctx.stroke();
-
+        svgElem('line', { x1: lineX, y1: ly1, x2: lineX - 2.5, y2: ly1 + 5, stroke: '#000', 'stroke-width': 0.8 }, layer);
+        svgElem('line', { x1: lineX, y1: ly1, x2: lineX + 2.5, y2: ly1 + 5, stroke: '#000', 'stroke-width': 0.8 }, layer);
         // Bottom arrow
-        ctx.beginPath();
-        ctx.moveTo(lineX, ly2);
-        ctx.lineTo(lineX - 2.5, ly2 - 5);
-        ctx.moveTo(lineX, ly2);
-        ctx.lineTo(lineX + 2.5, ly2 - 5);
-        ctx.stroke();
+        svgElem('line', { x1: lineX, y1: ly2, x2: lineX - 2.5, y2: ly2 - 5, stroke: '#000', 'stroke-width': 0.8 }, layer);
+        svgElem('line', { x1: lineX, y1: ly2, x2: lineX + 2.5, y2: ly2 - 5, stroke: '#000', 'stroke-width': 0.8 }, layer);
     }
-
-    ctx.restore();
 }
 
 // ==================== MAIN DRAW FUNCTION ====================
 function drawMap() {
-    var canvasContainer = document.querySelector('.canvas-container');
-    canvasContainer.scrollTop = 0;
-    canvasContainer.scrollLeft = 0;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, A4_WIDTH, A4_HEIGHT);
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, A4_WIDTH, A4_HEIGHT);
-    ctx.fillStyle = '#000';
+    svgClear();
 
     var MARGIN = 20;
     var PAGE_WIDTH = A4_WIDTH - 2 * MARGIN;
     var PAGE_HEIGHT = A4_HEIGHT - 2 * MARGIN;
 
-    // Outer border
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(MARGIN, MARGIN, PAGE_WIDTH, PAGE_HEIGHT);
+    // ---- Layer: Border (outer rectangle) ----
+    svgElem('rect', {
+        x: MARGIN, y: MARGIN, width: PAGE_WIDTH, height: PAGE_HEIGHT,
+        fill: 'none', stroke: '#000', 'stroke-width': 1.5
+    }, layerBorder);
 
     // ---- Read inputs ----
     var N = toFeet(document.getElementById('n_ft').value, document.getElementById('n_in').value);
@@ -1536,17 +1500,13 @@ function drawMap() {
     var E = toFeet(document.getElementById('e_ft').value, document.getElementById('e_in').value);
     var W = toFeet(document.getElementById('w_ft').value, document.getElementById('w_in').value);
 
-    if (Math.min(N, S, E, W) <= 0) {
-        alert('Please enter all dimensions greater than 0');
-        return;
-    }
+    if (Math.min(N, S, E, W) <= 0) return;
 
     var mode = getMode();
     var isRect = (mode === 'rectangle');
     var roadDir = document.getElementById('road_direction').value;
-    var mapping = getRoadMapping(roadDir);
+    var mapping = getRoadMapping();
 
-    // Gather dimension values by compass direction
     var dims = { N: N, S: S, E: E, W: W };
     var sideTextsInput = {
         N: document.getElementById('north_txt').value.toUpperCase(),
@@ -1555,7 +1515,6 @@ function drawMap() {
         W: document.getElementById('west_txt').value.toUpperCase()
     };
 
-    // Map to visual sides: bottom, top, left, right
     var visBottom = getDimForVisualSide(mapping, 'bottom', dims);
     var visTop    = getDimForVisualSide(mapping, 'top', dims);
     var visLeft   = getDimForVisualSide(mapping, 'left', dims);
@@ -1566,7 +1525,6 @@ function drawMap() {
     var textLeft   = getTextForVisualSide(mapping, 'left', sideTextsInput);
     var textRight  = getTextForVisualSide(mapping, 'right', sideTextsInput);
 
-    // For area: T = visual top width, B = visual bottom width, H = average of left and right heights
     var T = visTop;
     var B = visBottom;
     var H = (visLeft + visRight) / 2;
@@ -1574,63 +1532,51 @@ function drawMap() {
     var area = calculateArea(T, B, H, isRect);
 
     // ============================================================
-    // ZONE 1 - HEADER (top ~150px from margin)
+    // ZONE 1 - HEADER
     // ============================================================
     var zone1Top = MARGIN + 5;
     var zone1Height = 145;
 
     // Title text
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold ' + textSizes.title + 'px Arial';
-    ctx.textAlign = 'center';
     var titleText = document.getElementById('title').value.toUpperCase();
-    var titleEndY = wrapText(ctx, titleText, A4_WIDTH / 2, zone1Top + 15, PAGE_WIDTH - 40, textSizes.title + 2);
+    var titleEndY = svgWrapText(layerText, titleText, A4_WIDTH / 2, zone1Top + 15, PAGE_WIDTH - 40, textSizes.title + 2, textSizes.title, {
+        fontWeight: 'bold', textAnchor: 'middle', className: 'editable', dataField: 'title'
+    });
 
-    // Vendor / Vendee - measure label width dynamically to prevent overlap
+    // Vendor / Vendee
     var vendorY = titleEndY + textSizes.title + 12;
-    ctx.textAlign = 'left';
-    ctx.font = 'bold ' + textSizes.vendor + 'px Arial';
-
-    // Measure both labels to find the wider one for consistent colon alignment
-    var vendorLabelW = ctx.measureText('VENDOR').width;
-    var vendeeLabelW = ctx.measureText('VENDEES').width;
-    var labelColW = Math.max(vendorLabelW, vendeeLabelW) + 8; // +8 for gap before colon
+    var vendorLabelW = svgMeasureText('VENDOR', textSizes.vendor, 'bold');
+    var vendeeLabelW = svgMeasureText('VENDEES', textSizes.vendor, 'bold');
+    var labelColW = Math.max(vendorLabelW, vendeeLabelW) + 8;
     var colonX = MARGIN + 15 + labelColW;
 
-    // Vendor
-    ctx.font = 'bold ' + textSizes.vendor + 'px Arial';
-    ctx.fillText('VENDOR', MARGIN + 15, vendorY);
-    ctx.font = textSizes.vendor + 'px Arial';
+    // Vendor label
+    svgText(layerText, 'VENDOR', MARGIN + 15, vendorY, textSizes.vendor, { fontWeight: 'bold' });
     var vendorText = document.getElementById('vendor').value.toUpperCase();
-    var vendorEndY = wrapText(ctx, ': ' + vendorText, colonX, vendorY, PAGE_WIDTH - labelColW - 40, textSizes.vendor + 3);
+    var vendorEndY = svgWrapText(layerText, ': ' + vendorText, colonX, vendorY, PAGE_WIDTH - labelColW - 40, textSizes.vendor + 3, textSizes.vendor, {
+        className: 'editable', dataField: 'vendor'
+    });
 
     // Vendees
     var vendeeY = vendorEndY + textSizes.vendor + 6;
-    ctx.font = 'bold ' + textSizes.vendor + 'px Arial';
-    ctx.fillText('VENDEES', MARGIN + 15, vendeeY);
-    ctx.font = textSizes.vendor + 'px Arial';
+    svgText(layerText, 'VENDEES', MARGIN + 15, vendeeY, textSizes.vendor, { fontWeight: 'bold' });
     var vendeeLines = document.getElementById('vendees').value.toUpperCase().split('\n');
     var lastVendeeY = vendeeY;
     for (var vi = 0; vi < vendeeLines.length; vi++) {
         var prefix = vi === 0 ? ': ' : '  ';
-        lastVendeeY = wrapText(ctx, prefix + vendeeLines[vi], colonX, vendeeY + vi * (textSizes.vendor + 4), PAGE_WIDTH - labelColW - 40, textSizes.vendor + 3);
+        lastVendeeY = svgWrapText(layerText, prefix + vendeeLines[vi], colonX, vendeeY + vi * (textSizes.vendor + 4), PAGE_WIDTH - labelColW - 40, textSizes.vendor + 3, textSizes.vendor, {
+            className: 'editable', dataField: 'vendees'
+        });
     }
 
     // ============================================================
     // ZONE 2 - DRAWING AREA (dynamically sized)
     // ============================================================
-    // Zone 2 starts after header content
     var zone2Top = Math.max(MARGIN + zone1Height, lastVendeeY + textSizes.vendor + 15);
-
-    // Reserve space for footer (references, signatures, witnesses)
     var FOOTER_HEIGHT = 280;
     var zone3Top = A4_HEIGHT - MARGIN - FOOTER_HEIGHT;
-
-    // Zone 2 fills remaining space between header and footer
     var zone2Height = zone3Top - zone2Top - 10;
 
-    // Drawing area within zone 2 — dynamic margin based on text sizes
-    // Needs room for: dimension lines + dimension text + side labels + road indicator
     var DRAW_MARGIN = 60 + textSizes.dimensions + textSizes.sidetext * 2;
     var DRAW_WIDTH = Math.min(380, A4_WIDTH - 2 * MARGIN - 2 * DRAW_MARGIN);
     var DRAW_HEIGHT = Math.min(380, zone2Height - 2 * DRAW_MARGIN);
@@ -1639,17 +1585,10 @@ function drawMap() {
     var drawCenterY = zone2Top + zone2Height / 2;
 
     // ---- COORDINATE SYSTEM (Origin-based, bottom-left = 0,0) ----
-    // As per client spec:
-    // Rectangle: P1=(0,0), P2=(B,0), P3=(B,L), P4=(0,L)
-    // Trapezoid: P1=(0,0), P2=(B,0), P3=(T,L), P4=(0,L)
-    // Origin is always bottom-left corner. No center-based drawing.
-
-    // Uniform scaling
     var scaleX = DRAW_WIDTH / Math.max(T, B);
     var scaleY = DRAW_HEIGHT / Math.max(visLeft, visRight);
     var scale = Math.min(scaleX, scaleY);
 
-    // Compute plot corners in local coords (origin = bottom-left, Y up)
     var plotPts;
     var leftH = visLeft * scale;
     var rightH = visRight * scale;
@@ -1657,25 +1596,22 @@ function drawMap() {
     var tW = T * scale;
 
     if (isRect) {
-        // Rectangle: P1=(0,0), P2=(B,0), P3=(B,L), P4=(0,L)
         plotPts = [
-            { x: 0,  y: 0 },       // P1 bottom-left (origin)
-            { x: bW, y: 0 },       // P2 bottom-right
-            { x: bW, y: leftH },   // P3 top-right
-            { x: 0,  y: leftH }    // P4 top-left
+            { x: 0, y: 0 },
+            { x: bW, y: 0 },
+            { x: bW, y: leftH },
+            { x: 0, y: leftH }
         ];
     } else {
-        // Trapezoid: P1=(0,0), P2=(B,0), P3=(T,L), P4=(0,L)
-        // Origin at bottom-left. Top width offset from left edge (0).
         plotPts = [
-            { x: 0,   y: 0 },          // P1 bottom-left (origin)
-            { x: bW,  y: 0 },          // P2 bottom-right
-            { x: tW,  y: rightH },     // P3 top-right
-            { x: 0,   y: leftH }       // P4 top-left
+            { x: 0, y: 0 },
+            { x: bW, y: 0 },
+            { x: tW, y: rightH },
+            { x: 0, y: leftH }
         ];
     }
 
-    // Compute bounding box of plotPts to center on canvas
+    // Bounding box for centering
     var minPX = plotPts[0].x, maxPX = plotPts[0].x;
     var minPY = plotPts[0].y, maxPY = plotPts[0].y;
     for (var pi = 1; pi < 4; pi++) {
@@ -1687,13 +1623,9 @@ function drawMap() {
     var plotW = maxPX - minPX;
     var plotH = maxPY - minPY;
 
-    // Translation to center on canvas drawing zone
-    // Canvas Y is inverted (down positive), so we flip Y
     var offsetX = drawCenterX - (minPX + plotW / 2);
-    var offsetY = drawCenterY + (minPY + plotH / 2); // flip: canvas bottom = larger Y
+    var offsetY = drawCenterY + (minPY + plotH / 2);
 
-    // Convert local coords to canvas coords
-    // localY=0 (bottom) -> canvasY = offsetY, localY=H (top) -> canvasY = offsetY - H
     function toCanvas(pt) {
         return { x: pt.x + offsetX, y: offsetY - pt.y };
     }
@@ -1702,92 +1634,80 @@ function drawMap() {
     for (var ci = 0; ci < 4; ci++) {
         canvasPts.push(toCanvas(plotPts[ci]));
     }
-    // canvasPts: [BL, BR, TR, TL] in canvas coordinates
 
-    // ---- Draw plot border in RED ----
-    ctx.beginPath();
-    ctx.moveTo(canvasPts[0].x, canvasPts[0].y);
-    ctx.lineTo(canvasPts[1].x, canvasPts[1].y);
-    ctx.lineTo(canvasPts[2].x, canvasPts[2].y);
-    ctx.lineTo(canvasPts[3].x, canvasPts[3].y);
-    ctx.closePath();
-    ctx.strokeStyle = 'red';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    // ---- Draw plot border in RED (Layer: Plot) ----
+    var polyPoints = canvasPts.map(function(p) { return p.x + ',' + p.y; }).join(' ');
+    svgElem('polygon', {
+        points: polyPoints,
+        fill: 'none', stroke: 'red', 'stroke-width': 1.5
+    }, layerPlot);
 
-    // Plot center point (used by dimensions too)
     var plotCenterCanvas = {
         x: (canvasPts[0].x + canvasPts[1].x + canvasPts[2].x + canvasPts[3].x) / 4,
         y: (canvasPts[0].y + canvasPts[1].y + canvasPts[2].y + canvasPts[3].y) / 4
     };
 
-    // ---- Room box and open area inside the plot (toggle) ----
+    // ---- Interior room box and open area (Layer: Plot) ----
     if (document.getElementById('showInterior').checked) {
         var roomCenterY = plotCenterCanvas.y - plotH * 0.15;
         var roomBoxW = Math.min(plotW * 0.4, 80);
         var roomBoxH = Math.min(plotH * 0.25, 40);
 
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 0.8;
-        ctx.strokeRect(plotCenterCanvas.x - roomBoxW / 2, roomCenterY - roomBoxH / 2, roomBoxW, roomBoxH);
+        svgElem('rect', {
+            x: plotCenterCanvas.x - roomBoxW / 2,
+            y: roomCenterY - roomBoxH / 2,
+            width: roomBoxW, height: roomBoxH,
+            fill: 'none', stroke: '#000', 'stroke-width': 0.8
+        }, layerPlot);
 
-        ctx.fillStyle = '#000';
-        ctx.font = 'bold ' + textSizes.plotcenter + 'px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(document.getElementById('plot_center_txt').value.toUpperCase(), plotCenterCanvas.x, roomCenterY);
+        svgText(layerPlot, document.getElementById('plot_center_txt').value.toUpperCase(),
+            plotCenterCanvas.x, roomCenterY, textSizes.plotcenter, {
+                fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle',
+                className: 'editable', dataField: 'plot_center_txt'
+            });
 
-        // Dashed separator line
+        // Dashed separator
         var dashY = roomCenterY + roomBoxH / 2 + 5;
         var dashLeft = canvasPts[0].x + (canvasPts[3].x - canvasPts[0].x) * ((canvasPts[0].y - dashY) / (canvasPts[0].y - canvasPts[3].y));
         var dashRight = canvasPts[1].x + (canvasPts[2].x - canvasPts[1].x) * ((canvasPts[1].y - dashY) / (canvasPts[1].y - canvasPts[2].y));
         if (isNaN(dashLeft)) dashLeft = canvasPts[0].x;
         if (isNaN(dashRight)) dashRight = canvasPts[1].x;
 
-        ctx.setLineDash([3, 3]);
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 0.6;
-        ctx.beginPath();
-        ctx.moveTo(dashLeft, dashY);
-        ctx.lineTo(dashRight, dashY);
-        ctx.stroke();
-        ctx.setLineDash([]);
+        svgElem('line', {
+            x1: dashLeft, y1: dashY, x2: dashRight, y2: dashY,
+            stroke: '#000', 'stroke-width': 0.6, 'stroke-dasharray': '3,3'
+        }, layerPlot);
 
-        // OPEN AREA text
+        // Open area text
         var openAreaY = (dashY + canvasPts[0].y) / 2;
-        ctx.fillStyle = '#000';
-        ctx.font = (textSizes.sidetext + 1) + 'px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(document.getElementById('open_area_txt').value.toUpperCase(), plotCenterCanvas.x, openAreaY);
+        svgText(layerPlot, document.getElementById('open_area_txt').value.toUpperCase(),
+            plotCenterCanvas.x, openAreaY, textSizes.sidetext + 1, {
+                textAnchor: 'middle', dominantBaseline: 'middle',
+                className: 'editable', dataField: 'open_area_txt'
+            });
     }
 
-    // ---- DIMENSION LINES (proper dimension engine) ----
-    // Dynamic offset: scale with plot size but clamp to reasonable range
+    // ---- DIMENSION LINES (Layer: Dimensions) ----
     var DIM_OFFSET = Math.max(22, Math.min(38, plotH * 0.08));
 
-    // Bottom dimension (P1 -> P2): normal pointing down
+    // Bottom (P1 -> P2)
     drawDimensionLine(canvasPts[0], canvasPts[1], DIM_OFFSET, { x: 0, y: 1 }, ftStr(visBottom));
-
-    // Top dimension (P4 -> P3): normal pointing up
+    // Top (P4 -> P3)
     drawDimensionLine(canvasPts[3], canvasPts[2], DIM_OFFSET, { x: 0, y: -1 }, ftStr(visTop));
 
-    // Left dimension (P1 -> P4): normal pointing left
-    // Compute outward normal for left side
+    // Left (P1 -> P4) - compute outward normal
     var leftDx = canvasPts[3].x - canvasPts[0].x;
     var leftDy = canvasPts[3].y - canvasPts[0].y;
     var leftLen = Math.sqrt(leftDx * leftDx + leftDy * leftDy);
-    var leftNorm = { x: leftDy / leftLen, y: -leftDx / leftLen }; // perpendicular, pointing left
-    // Ensure it points outward (away from center)
+    var leftNorm = { x: leftDy / leftLen, y: -leftDx / leftLen };
     var leftMid = { x: (canvasPts[0].x + canvasPts[3].x) / 2, y: (canvasPts[0].y + canvasPts[3].y) / 2 };
     var toCenter = { x: plotCenterCanvas.x - leftMid.x, y: plotCenterCanvas.y - leftMid.y };
     if (leftNorm.x * toCenter.x + leftNorm.y * toCenter.y > 0) {
-        leftNorm.x = -leftNorm.x;
-        leftNorm.y = -leftNorm.y;
+        leftNorm.x = -leftNorm.x; leftNorm.y = -leftNorm.y;
     }
     drawDimensionLine(canvasPts[0], canvasPts[3], DIM_OFFSET, leftNorm, ftStr(visLeft));
 
-    // Right dimension (P2 -> P3): normal pointing right
+    // Right (P2 -> P3)
     var rightDx = canvasPts[2].x - canvasPts[1].x;
     var rightDy = canvasPts[2].y - canvasPts[1].y;
     var rightLen = Math.sqrt(rightDx * rightDx + rightDy * rightDy);
@@ -1795,37 +1715,27 @@ function drawMap() {
     var rightMid = { x: (canvasPts[1].x + canvasPts[2].x) / 2, y: (canvasPts[1].y + canvasPts[2].y) / 2 };
     var toCenterR = { x: plotCenterCanvas.x - rightMid.x, y: plotCenterCanvas.y - rightMid.y };
     if (rightNorm.x * toCenterR.x + rightNorm.y * toCenterR.y > 0) {
-        rightNorm.x = -rightNorm.x;
-        rightNorm.y = -rightNorm.y;
+        rightNorm.x = -rightNorm.x; rightNorm.y = -rightNorm.y;
     }
     drawDimensionLine(canvasPts[1], canvasPts[2], DIM_OFFSET, rightNorm, ftStr(visRight));
 
-    // ---- SIDE TEXTS ----
-    // Side text offset: dimension offset + dimension text height + generous gap
+    // ---- SIDE TEXTS (Layer: Text) ----
     var SIDE_TEXT_GAP = DIM_OFFSET + textSizes.dimensions + 25;
 
-    // Top side text (always NORTH)
     drawSideText(canvasPts[3], canvasPts[2], SIDE_TEXT_GAP, { x: 0, y: -1 }, textTop, textSizes.sidetext);
-
-    // Left side text (always WEST)
     drawSideText(canvasPts[0], canvasPts[3], SIDE_TEXT_GAP, leftNorm, textLeft, textSizes.sidetext);
-
-    // Right side text (always EAST)
     drawSideText(canvasPts[1], canvasPts[2], SIDE_TEXT_GAP, rightNorm, textRight, textSizes.sidetext);
 
-    // Bottom side text (always SOUTH)
+    // Bottom side text
     var bottomSideTxtY = (canvasPts[0].y + canvasPts[1].y) / 2 + SIDE_TEXT_GAP;
-    ctx.fillStyle = '#000';
-    ctx.font = textSizes.sidetext + 'px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(textBottom, (canvasPts[0].x + canvasPts[1].x) / 2, bottomSideTxtY);
+    svgText(layerText, textBottom, (canvasPts[0].x + canvasPts[1].x) / 2, bottomSideTxtY, textSizes.sidetext, {
+        textAnchor: 'middle', dominantBaseline: 'middle'
+    });
 
-    // ---- ROAD INDICATOR (position based on road direction) ----
+    // ---- ROAD INDICATOR ----
     var roadSide = getRoadSide(roadDir);
     var roadText = document.getElementById('road_text').value;
 
-    // Calculate road offset: must clear dimension lines + side text (including multiline wrap)
     var roadSideLineCount = 1;
     var roadEdgeP1, roadEdgeP2;
     if (roadSide === 'bottom') {
@@ -1841,157 +1751,104 @@ function drawMap() {
         roadEdgeP1 = canvasPts[1]; roadEdgeP2 = canvasPts[2];
         roadSideLineCount = countSideTextLines(canvasPts[1], canvasPts[2], textRight, textSizes.sidetext);
     }
-    // Road offset = SIDE_TEXT_GAP (where side text starts) + side text height (lines * lineH) + extra padding
     var sideTextHeight = roadSideLineCount * (textSizes.sidetext + 2);
     var roadOffset = SIDE_TEXT_GAP + sideTextHeight + 12;
 
-    if (roadSide === 'bottom') {
-        drawRoadIndicator(canvasPts[0], canvasPts[1], roadText, 'bottom', roadOffset);
-    } else if (roadSide === 'top') {
-        drawRoadIndicator(canvasPts[3], canvasPts[2], roadText, 'top', roadOffset);
-    } else if (roadSide === 'left') {
-        drawRoadIndicator(canvasPts[0], canvasPts[3], roadText, 'left', roadOffset);
-    } else if (roadSide === 'right') {
-        drawRoadIndicator(canvasPts[1], canvasPts[2], roadText, 'right', roadOffset);
-    }
+    drawRoadIndicator(roadEdgeP1, roadEdgeP2, roadText, roadSide, roadOffset);
 
     // ============================================================
-    // ZONE 3 - FOOTER (References, Signatures, Witnesses)
+    // ZONE 3 - FOOTER (Layer: Text)
     // ============================================================
-    var zone3Height = A4_HEIGHT - MARGIN - zone3Top;
-    var fs = textSizes.sidetext;      // font size shorthand
+    var fs = textSizes.sidetext;
     var fv = textSizes.vendor;
-    var lineGap = fs + 5;             // vertical gap between lines
+    var lineGap = fs + 5;
 
-    // ---- REFERENCES BOX (left side) ----
-    var footerGap = 12; // gap between the two boxes
+    // References section (left)
+    var footerGap = 12;
     var refBoxX = MARGIN + 15;
     var refBoxY = zone3Top + 5;
-    var refBoxW = (PAGE_WIDTH - 30 - footerGap) * 0.55; // 55% of available width
-    var refBoxH = 110;
+    var refBoxW = (PAGE_WIDTH - 30 - footerGap) * 0.55;
 
-    ctx.fillStyle = '#000';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
+    svgText(layerText, 'REFERENCES', refBoxX, refBoxY + 8 + fv, fv, { fontWeight: 'bold' });
 
-    // Title
-    ctx.font = 'bold ' + fv + 'px Arial';
-    ctx.fillText('REFERENCES', refBoxX, refBoxY + 8);
-
-    // Including with red box symbol
-    ctx.font = fs + 'px Arial';
-    var inclY = refBoxY + 8 + fv + 6;
-    ctx.strokeStyle = 'red';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(refBoxX, inclY, 10, 7);
-    ctx.strokeStyle = '#000';
-    ctx.fillStyle = '#000';
-    ctx.fillText('INCLUDING', refBoxX + 15, inclY);
+    // Including with red box
+    var inclY = refBoxY + 8 + fv + 6 + fs;
+    svgElem('rect', {
+        x: refBoxX, y: inclY - fs + 2, width: 10, height: 7,
+        fill: 'none', stroke: 'red', 'stroke-width': 1
+    }, layerText);
+    svgText(layerText, 'INCLUDING', refBoxX + 15, inclY, fs, {});
 
     // Area details
     var areaY = inclY + lineGap + 2;
-    ctx.font = fs + 'px Arial';
-    ctx.fillText('TOTAL AREA  : ' + area.sqft.toFixed(2) + ' Sq.Fts', refBoxX, areaY);
-    ctx.fillText('                       : ' + area.sqyd.toFixed(2) + ' Sq.Yds', refBoxX, areaY + lineGap);
-    ctx.fillText('             ( OR )  : ' + area.sqm.toFixed(2) + ' Sq.Mtrs', refBoxX, areaY + lineGap * 2);
+    svgText(layerText, 'TOTAL AREA  : ' + area.sqft.toFixed(2) + ' Sq.Fts', refBoxX, areaY, fs, {});
+    svgText(layerText, '                       : ' + area.sqyd.toFixed(2) + ' Sq.Yds', refBoxX, areaY + lineGap, fs, {});
+    svgText(layerText, '             ( OR )  : ' + area.sqm.toFixed(2) + ' Sq.Mtrs', refBoxX, areaY + lineGap * 2, fs, {});
 
-    // Plinth area
     var plinthArea = parseFloat(document.getElementById('plinth').value) || 0;
-    ctx.fillText('A.C.C ROOF', refBoxX, areaY + lineGap * 3 + 2);
-    ctx.fillText('PLINTH AREA : ' + plinthArea.toFixed(2) + ' Sq.Fts.', refBoxX, areaY + lineGap * 4 + 2);
+    svgText(layerText, 'A.C.C ROOF', refBoxX, areaY + lineGap * 3 + 2, fs, {});
+    svgText(layerText, 'PLINTH AREA : ' + plinthArea.toFixed(2) + ' Sq.Fts.', refBoxX, areaY + lineGap * 4 + 2, fs, {});
 
-    // ---- COMPASS ROSE (right of references box) ----
-    drawCompass(refBoxX + refBoxW - 30, refBoxY + refBoxH / 2, 14);
+    // Compass rose
+    var refBoxH = 110;
+    drawCompass(layerText, refBoxX + refBoxW - 30, refBoxY + refBoxH / 2, 14);
 
-    // ---- SIGNATURES BOX (right side) ----
+    // Signatures section (right)
     var sigBoxX = refBoxX + refBoxW + footerGap;
     var sigBoxY = refBoxY;
-    var sigBoxW = (PAGE_WIDTH - 30 - footerGap) * 0.45; // 45% of available width
-    var sigBoxH = refBoxH; // same height as references
+    var sigBoxW = (PAGE_WIDTH - 30 - footerGap) * 0.45;
 
-    // Vendor signatures
-    ctx.fillStyle = '#000';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.font = 'bold ' + fv + 'px Arial';
-    ctx.fillText('SIG. OF THE VENDOR', sigBoxX + sigBoxW / 2, sigBoxY + 8);
+    svgText(layerText, 'SIG. OF THE VENDOR', sigBoxX + sigBoxW / 2, sigBoxY + 8 + fv, fv, {
+        fontWeight: 'bold', textAnchor: 'middle'
+    });
 
-    ctx.textAlign = 'left';
-    ctx.font = fs + 'px Arial';
-    var vSig1 = sigBoxY + 8 + fv + 10;
+    var vSig1 = sigBoxY + 8 + fv + 10 + fs;
     var vSig2 = vSig1 + lineGap + 4;
-    ctx.fillText('1.', sigBoxX + 10, vSig1);
-    ctx.fillText('2.', sigBoxX + 10, vSig2);
+    svgText(layerText, '1.', sigBoxX + 10, vSig1, fs, {});
+    svgText(layerText, '2.', sigBoxX + 10, vSig2, fs, {});
 
     // Signature underlines
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    ctx.moveTo(sigBoxX + 20, vSig1 + fs + 2);
-    ctx.lineTo(sigBoxX + sigBoxW - 10, vSig1 + fs + 2);
-    ctx.moveTo(sigBoxX + 20, vSig2 + fs + 2);
-    ctx.lineTo(sigBoxX + sigBoxW - 10, vSig2 + fs + 2);
-    ctx.stroke();
+    svgElem('line', { x1: sigBoxX + 20, y1: vSig1 + 3, x2: sigBoxX + sigBoxW - 10, y2: vSig1 + 3, stroke: '#000', 'stroke-width': 0.5 }, layerText);
+    svgElem('line', { x1: sigBoxX + 20, y1: vSig2 + 3, x2: sigBoxX + sigBoxW - 10, y2: vSig2 + 3, stroke: '#000', 'stroke-width': 0.5 }, layerText);
 
     // Vendee signatures
     var sepY = vSig2 + fs + 15;
-    ctx.textAlign = 'center';
-    ctx.font = 'bold ' + fv + 'px Arial';
-    ctx.fillText('SIG. OF THE VENDEES', sigBoxX + sigBoxW / 2, sepY + 6);
+    svgText(layerText, 'SIG. OF THE VENDEES', sigBoxX + sigBoxW / 2, sepY + 6 + fv, fv, {
+        fontWeight: 'bold', textAnchor: 'middle'
+    });
 
-    ctx.textAlign = 'left';
-    ctx.font = fs + 'px Arial';
-    var veSig1 = sepY + 6 + fv + 10;
+    var veSig1 = sepY + 6 + fv + 10 + fs;
     var veSig2 = veSig1 + lineGap + 4;
-    ctx.fillText('1.', sigBoxX + 10, veSig1);
-    ctx.fillText('2.', sigBoxX + 10, veSig2);
+    svgText(layerText, '1.', sigBoxX + 10, veSig1, fs, {});
+    svgText(layerText, '2.', sigBoxX + 10, veSig2, fs, {});
 
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    ctx.moveTo(sigBoxX + 20, veSig1 + fs + 2);
-    ctx.lineTo(sigBoxX + sigBoxW - 10, veSig1 + fs + 2);
-    ctx.moveTo(sigBoxX + 20, veSig2 + fs + 2);
-    ctx.lineTo(sigBoxX + sigBoxW - 10, veSig2 + fs + 2);
-    ctx.stroke();
+    svgElem('line', { x1: sigBoxX + 20, y1: veSig1 + 3, x2: sigBoxX + sigBoxW - 10, y2: veSig1 + 3, stroke: '#000', 'stroke-width': 0.5 }, layerText);
+    svgElem('line', { x1: sigBoxX + 20, y1: veSig2 + 3, x2: sigBoxX + sigBoxW - 10, y2: veSig2 + 3, stroke: '#000', 'stroke-width': 0.5 }, layerText);
 
-    // ---- WITNESSES (below both sections, calculated from actual content bottom) ----
+    // Witnesses
     var refContentBottom = areaY + lineGap * 4 + 2 + fs + 4;
     var sigContentBottom = veSig2 + fs + 6;
     var witY = Math.max(refContentBottom, sigContentBottom) + 15;
 
-    ctx.fillStyle = '#000';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.font = 'bold ' + fv + 'px Arial';
-    ctx.fillText('WITNESSES', MARGIN + 15, witY);
+    svgText(layerText, 'WITNESSES', MARGIN + 15, witY + fv, fv, { fontWeight: 'bold' });
 
-    ctx.font = fs + 'px Arial';
     var wit1 = document.getElementById('wit1').value;
     var wit2 = document.getElementById('wit2').value;
-    var witLine1 = witY + fv + 8;
+    var witLine1 = witY + fv + 8 + fs;
     var witLine2 = witLine1 + lineGap + 6;
 
-    ctx.fillText('1. ' + wit1, MARGIN + 15, witLine1);
-    ctx.fillText('2. ' + wit2, MARGIN + 15, witLine2);
+    svgText(layerText, '1. ' + wit1, MARGIN + 15, witLine1, fs, { className: 'editable', dataField: 'wit1' });
+    svgText(layerText, '2. ' + wit2, MARGIN + 15, witLine2, fs, { className: 'editable', dataField: 'wit2' });
 
     // Witness underlines
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    ctx.moveTo(MARGIN + 28, witLine1 + fs + 3);
-    ctx.lineTo(MARGIN + 200, witLine1 + fs + 3);
-    ctx.moveTo(MARGIN + 28, witLine2 + fs + 3);
-    ctx.lineTo(MARGIN + 200, witLine2 + fs + 3);
-    ctx.stroke();
+    svgElem('line', { x1: MARGIN + 28, y1: witLine1 + 5, x2: MARGIN + 200, y2: witLine1 + 5, stroke: '#000', 'stroke-width': 0.5 }, layerText);
+    svgElem('line', { x1: MARGIN + 28, y1: witLine2 + 5, x2: MARGIN + 200, y2: witLine2 + 5, stroke: '#000', 'stroke-width': 0.5 }, layerText);
 }
 
-// ==================== PDF EXPORT ====================
+// ==================== PDF EXPORT (Vector, selectable text) ====================
 function downloadPDF() {
     var jsPDF = window.jspdf.jsPDF;
-
-    // Use the high-res canvas directly
-    var imgData = canvas.toDataURL('image/png', 1.0);
+    var svgElement = document.getElementById('mapSvg');
 
     var pdf = new jsPDF({
         orientation: 'portrait',
@@ -1999,13 +1856,44 @@ function downloadPDF() {
         format: [A4_WIDTH, A4_HEIGHT]
     });
 
-    pdf.addImage(imgData, 'PNG', 0, 0, A4_WIDTH, A4_HEIGHT, '', 'FAST');
-    pdf.save('plot-map.pdf');
+    pdf.svg(svgElement, {
+        x: 0, y: 0,
+        width: A4_WIDTH, height: A4_HEIGHT
+    }).then(function() {
+        pdf.save('plot-map.pdf');
+    });
 }
+
+// ==================== CLICK-TO-EDIT TEXT ====================
+(function() {
+    var svgEl = document.getElementById('mapSvg');
+    svgEl.addEventListener('dblclick', function(e) {
+        var target = e.target.closest('text.editable');
+        if (!target) return;
+
+        var field = target.getAttribute('data-field');
+        if (!field) return;
+
+        var inputEl = document.getElementById(field);
+        if (!inputEl) return;
+
+        // Scroll to and focus the input field in the controls panel
+        inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        inputEl.focus();
+        inputEl.select();
+
+        // Briefly highlight the input
+        inputEl.style.borderColor = '#FFD93D';
+        inputEl.style.boxShadow = '0 0 8px rgba(255, 217, 61, 0.5)';
+        setTimeout(function() {
+            inputEl.style.borderColor = '';
+            inputEl.style.boxShadow = '';
+        }, 2000);
+    });
+})();
 
 // ==================== INITIALIZATION ====================
 window.addEventListener('load', function() {
-    // Load saved form data first (restores all inputs, text sizes, zoom)
     var restored = loadFormData();
 
     if (!restored) {
@@ -2016,8 +1904,6 @@ window.addEventListener('load', function() {
     updateModeUI();
     initBodySizeDisplay();
     drawMap();
-
-    // Also save after drawing so initial state is persisted
     saveFormData();
 });
 </script>
