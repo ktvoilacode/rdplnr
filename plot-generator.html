@@ -659,10 +659,31 @@
     <div class="controls-panel">
         <h2>Plot Map Generator</h2>
 
-        <!-- 1. Plot Dimensions (always open) -->
+        <!-- 1. Header Info (Title, Vendor, Vendees) — maps to Zone 1 -->
+        <div class="section open" id="sec-header">
+            <div class="section-header" onclick="toggleSection('sec-header')">
+                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Header Info</h3>
+                <span class="arrow">&#x25BC;</span>
+            </div>
+            <div class="section-body">
+                <div class="section-content">
+                    <label class="form-label">Title / Description</label>
+                    <textarea id="title" placeholder="Enter plot title..." rows="3">PLAN SHOWING THE A.C.C ROOF HOUSE WITH OPEN PLACE BEARING G.W.M.C H.NO.31-1-85(PART), SITUATED AT KOMATIPALLY VILLAGE, HASANPARTHY MANDAL, HANUMAKONDA DISTRICT, WITHIN THE LIMITS OF GREATER WARANGAL MUNICIPAL CORPORATION.</textarea>
+
+                    <label class="form-label">Vendor</label>
+                    <input id="vendor" type="text" value="PADIDA VENKATALAXMI, W/o. AILAIAH @ PADIDELA ILAIAH">
+
+                    <label class="form-label">Vendees (one per line)</label>
+                    <textarea id="vendees" rows="2">1.PARDALA MOHAN, S/o. PARDALA MOGILI
+2.PADIDALA RAJINIKANTH, S/o. PADIDALA MOGILI</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Plot Shape & Dimensions — maps to Zone 2 -->
         <div class="section open" id="sec-dimensions">
             <div class="section-header" onclick="toggleSection('sec-dimensions')">
-                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M21 3H3v18h18V3z"/><path d="M9 3v18M3 9h18"/></svg> Plot Dimensions</h3>
+                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M21 3H3v18h18V3z"/><path d="M9 3v18M3 9h18"/></svg> Plot Shape & Dimensions</h3>
                 <span class="arrow">&#x25BC;</span>
             </div>
             <div class="section-body">
@@ -705,6 +726,29 @@
                         </div>
                     </div>
                     <div class="synced-hint" id="syncHint">S and W are auto-synced in Rectangle mode</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Boundary Labels & Road — maps to sides around plot -->
+        <div class="section" id="sec-boundaries">
+            <div class="section-header" onclick="toggleSection('sec-boundaries')">
+                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M17 3l4 4-4 4"/><path d="M3 11h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 13H3"/></svg> Boundary Labels & Road</h3>
+                <span class="arrow">&#x25BC;</span>
+            </div>
+            <div class="section-body">
+                <div class="section-content">
+                    <label class="form-label">North Side</label>
+                    <textarea id="north_txt" rows="1">( SOUTH ) OPEN LAND OF PADIDELA THIRUPATHI</textarea>
+
+                    <label class="form-label">South Side</label>
+                    <textarea id="south_txt" rows="1">( NORTH ) ROAD</textarea>
+
+                    <label class="form-label">East Side</label>
+                    <textarea id="east_txt" rows="2">( EAST ) H.NO.31-1-86 PART OF VENDOR SOLD TO PADIDELA SHEKAR & PADIDHLA SRINIVAS</textarea>
+
+                    <label class="form-label">West Side</label>
+                    <textarea id="west_txt" rows="1">( WEST ) OPEN LAND OF OTHERS</textarea>
 
                     <div class="form-row" style="margin-top: 10px;">
                         <div class="form-group">
@@ -725,51 +769,7 @@
             </div>
         </div>
 
-        <!-- 2. Document Info -->
-        <div class="section open" id="sec-document">
-            <div class="section-header" onclick="toggleSection('sec-document')">
-                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Document Info</h3>
-                <span class="arrow">&#x25BC;</span>
-            </div>
-            <div class="section-body">
-                <div class="section-content">
-                    <label class="form-label">Title / Description</label>
-                    <textarea id="title" placeholder="Enter plot title..." rows="3">PLAN SHOWING THE A.C.C ROOF HOUSE WITH OPEN PLACE BEARING G.W.M.C H.NO.31-1-85(PART), SITUATED AT KOMATIPALLY VILLAGE, HASANPARTHY MANDAL, HANUMAKONDA DISTRICT, WITHIN THE LIMITS OF GREATER WARANGAL MUNICIPAL CORPORATION.</textarea>
-
-                    <label class="form-label">Vendor</label>
-                    <input id="vendor" type="text" value="PADIDA VENKATALAXMI, W/o. AILAIAH @ PADIDELA ILAIAH">
-
-                    <label class="form-label">Vendees (one per line)</label>
-                    <textarea id="vendees" rows="2">1.PARDALA MOHAN, S/o. PARDALA MOGILI
-2.PADIDALA RAJINIKANTH, S/o. PADIDALA MOGILI</textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. Side Labels -->
-        <div class="section" id="sec-sides">
-            <div class="section-header" onclick="toggleSection('sec-sides')">
-                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M17 3l4 4-4 4"/><path d="M3 11h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 13H3"/></svg> Side Labels</h3>
-                <span class="arrow">&#x25BC;</span>
-            </div>
-            <div class="section-body">
-                <div class="section-content">
-                    <label class="form-label">North Side</label>
-                    <textarea id="north_txt" rows="1">( SOUTH ) OPEN LAND OF PADIDELA THIRUPATHI</textarea>
-
-                    <label class="form-label">South Side</label>
-                    <textarea id="south_txt" rows="1">( NORTH ) ROAD</textarea>
-
-                    <label class="form-label">East Side</label>
-                    <textarea id="east_txt" rows="2">( EAST ) H.NO.31-1-86 PART OF VENDOR SOLD TO PADIDELA SHEKAR & PADIDHLA SRINIVAS</textarea>
-
-                    <label class="form-label">West Side</label>
-                    <textarea id="west_txt" rows="1">( WEST ) OPEN LAND OF OTHERS</textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. Plot Interior -->
+        <!-- 4. Plot Interior — room/open area inside plot -->
         <div class="section" id="sec-interior">
             <div class="section-header" onclick="toggleSection('sec-interior')">
                 <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Plot Interior</h3>
@@ -802,10 +802,10 @@
             </div>
         </div>
 
-        <!-- 5. Witnesses -->
-        <div class="section" id="sec-witnesses">
-            <div class="section-header" onclick="toggleSection('sec-witnesses')">
-                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Witnesses</h3>
+        <!-- 5. Footer Details — signatures, witnesses, references (Zone 3) -->
+        <div class="section" id="sec-footer">
+            <div class="section-header" onclick="toggleSection('sec-footer')">
+                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Footer — Witnesses & Signatures</h3>
                 <span class="arrow">&#x25BC;</span>
             </div>
             <div class="section-body">
@@ -818,7 +818,7 @@
             </div>
         </div>
 
-        <!-- 6. Display Settings (collapsed by default) -->
+        <!-- 6. Display Settings -->
         <div class="section" id="sec-display">
             <div class="section-header" onclick="toggleSection('sec-display')">
                 <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Display Settings</h3>
@@ -1362,7 +1362,7 @@ function drawDimensionLine(p1, p2, offset, normalDir, label) {
 }
 
 // ==================== DRAW SIDE TEXT (SVG) ====================
-function drawSideText(p1, p2, offset, normalDir, text, fontSize) {
+function drawSideText(p1, p2, offset, normalDir, text, fontSize, dataField) {
     if (!text) return 1;
     var layer = layerText;
 
@@ -1399,10 +1399,12 @@ function drawSideText(p1, p2, offset, normalDir, text, fontSize) {
     }, layer);
 
     for (var j = 0; j < lines.length; j++) {
-        svgText(g, lines[j], 0, startY + j * lineH, fontSize, {
-            textAnchor: 'middle',
-            dominantBaseline: 'middle'
-        });
+        var opts = { textAnchor: 'middle', dominantBaseline: 'middle' };
+        if (dataField) {
+            opts.className = 'editable';
+            opts.dataField = dataField;
+        }
+        svgText(g, lines[j], 0, startY + j * lineH, fontSize, opts);
     }
 
     return lines.length;
@@ -1442,7 +1444,8 @@ function drawRoadIndicator(p1, p2, roadText, side, roadOffset) {
         var roadY = side === 'bottom' ? midY + roadOffset : midY - roadOffset;
 
         svgText(layer, roadText.toUpperCase(), midX, roadY, fs, {
-            fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle'
+            fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle',
+            className: 'editable', dataField: 'road_text'
         });
 
         var lineWidth = Math.min(Math.abs(p2.x - p1.x) * 0.6, 120);
@@ -1462,7 +1465,8 @@ function drawRoadIndicator(p1, p2, roadText, side, roadOffset) {
 
         svgText(layer, roadText.toUpperCase(), 0, 0, fs, {
             fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle',
-            transform: 'translate(' + roadX + ',' + midY + ') rotate(-90)'
+            transform: 'translate(' + roadX + ',' + midY + ') rotate(-90)',
+            className: 'editable', dataField: 'road_text'
         });
 
         var lineLen = Math.min(Math.abs(p2.y - p1.y) * 0.6, 120);
@@ -1722,14 +1726,15 @@ function drawMap() {
     // ---- SIDE TEXTS (Layer: Text) ----
     var SIDE_TEXT_GAP = DIM_OFFSET + textSizes.dimensions + 25;
 
-    drawSideText(canvasPts[3], canvasPts[2], SIDE_TEXT_GAP, { x: 0, y: -1 }, textTop, textSizes.sidetext);
-    drawSideText(canvasPts[0], canvasPts[3], SIDE_TEXT_GAP, leftNorm, textLeft, textSizes.sidetext);
-    drawSideText(canvasPts[1], canvasPts[2], SIDE_TEXT_GAP, rightNorm, textRight, textSizes.sidetext);
+    drawSideText(canvasPts[3], canvasPts[2], SIDE_TEXT_GAP, { x: 0, y: -1 }, textTop, textSizes.sidetext, 'north_txt');
+    drawSideText(canvasPts[0], canvasPts[3], SIDE_TEXT_GAP, leftNorm, textLeft, textSizes.sidetext, 'west_txt');
+    drawSideText(canvasPts[1], canvasPts[2], SIDE_TEXT_GAP, rightNorm, textRight, textSizes.sidetext, 'east_txt');
 
     // Bottom side text
     var bottomSideTxtY = (canvasPts[0].y + canvasPts[1].y) / 2 + SIDE_TEXT_GAP;
     svgText(layerText, textBottom, (canvasPts[0].x + canvasPts[1].x) / 2, bottomSideTxtY, textSizes.sidetext, {
-        textAnchor: 'middle', dominantBaseline: 'middle'
+        textAnchor: 'middle', dominantBaseline: 'middle',
+        className: 'editable', dataField: 'south_txt'
     });
 
     // ---- ROAD INDICATOR ----
@@ -1787,7 +1792,9 @@ function drawMap() {
 
     var plinthArea = parseFloat(document.getElementById('plinth').value) || 0;
     svgText(layerText, 'A.C.C ROOF', refBoxX, areaY + lineGap * 3 + 2, fs, {});
-    svgText(layerText, 'PLINTH AREA : ' + plinthArea.toFixed(2) + ' Sq.Fts.', refBoxX, areaY + lineGap * 4 + 2, fs, {});
+    svgText(layerText, 'PLINTH AREA : ' + plinthArea.toFixed(2) + ' Sq.Fts.', refBoxX, areaY + lineGap * 4 + 2, fs, {
+        className: 'editable', dataField: 'plinth'
+    });
 
     // Compass rose
     var refBoxH = 110;
@@ -1865,6 +1872,23 @@ function downloadPDF() {
 }
 
 // ==================== CLICK-TO-EDIT TEXT ====================
+// Map each data-field to its accordion section ID
+var fieldToSection = {
+    title: 'sec-header',
+    vendor: 'sec-header',
+    vendees: 'sec-header',
+    north_txt: 'sec-boundaries',
+    south_txt: 'sec-boundaries',
+    east_txt: 'sec-boundaries',
+    west_txt: 'sec-boundaries',
+    road_text: 'sec-boundaries',
+    plot_center_txt: 'sec-interior',
+    open_area_txt: 'sec-interior',
+    plinth: 'sec-interior',
+    wit1: 'sec-footer',
+    wit2: 'sec-footer'
+};
+
 (function() {
     var svgEl = document.getElementById('mapSvg');
     svgEl.addEventListener('dblclick', function(e) {
@@ -1877,18 +1901,29 @@ function downloadPDF() {
         var inputEl = document.getElementById(field);
         if (!inputEl) return;
 
-        // Scroll to and focus the input field in the controls panel
-        inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        inputEl.focus();
-        inputEl.select();
+        // Open the corresponding accordion section if closed
+        var sectionId = fieldToSection[field];
+        if (sectionId) {
+            var section = document.getElementById(sectionId);
+            if (section && !section.classList.contains('open')) {
+                section.classList.add('open');
+            }
+        }
 
-        // Briefly highlight the input
-        inputEl.style.borderColor = '#FFD93D';
-        inputEl.style.boxShadow = '0 0 8px rgba(255, 217, 61, 0.5)';
+        // Small delay to let section expand, then scroll and focus
         setTimeout(function() {
-            inputEl.style.borderColor = '';
-            inputEl.style.boxShadow = '';
-        }, 2000);
+            inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            inputEl.focus();
+            if (inputEl.select) inputEl.select();
+
+            // Highlight the input briefly
+            inputEl.style.borderColor = '#FFD93D';
+            inputEl.style.boxShadow = '0 0 8px rgba(255, 217, 61, 0.5)';
+            setTimeout(function() {
+                inputEl.style.borderColor = '';
+                inputEl.style.boxShadow = '';
+            }, 2000);
+        }, 200);
     });
 })();
 
