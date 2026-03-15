@@ -279,7 +279,7 @@
 <!-- Left Panel -->
 <div class="left-panel">
     <div class="logo-section">
-        
+        <h1>RRD PLANERS</h1>
     </div>
     
     <div class="content-section">
@@ -356,7 +356,7 @@ async function hashCredentials(email, password) {
 
 // Pre-compute hash on first load for the known user
 (async function initHashes() {
-    const hash = await hashCredentials('admin@rrdplanners.com', 'admin123');
+    const hash = await hashCredentials('admin@rrdplaners.com', 'admin123');
     VALID_USERS[0].emailHash = hash;
 })();
 

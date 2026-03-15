@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>MAP - Plot Generator</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -45,21 +45,53 @@
     .header-right {
         display: flex;
         align-items: center;
-        gap: 20px;
+        gap: 8px;
     }
 
     .user-email {
         color: #888;
         font-size: 14px;
+        margin-right: 8px;
+    }
+
+    .header-btn {
+        padding: 8px 16px;
+        background: transparent;
+        color: #ddd;
+        border: 1px solid #444;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .header-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: #666;
+    }
+
+    .header-btn.active {
+        background: rgba(255, 217, 61, 0.1);
+        border-color: #FFD93D;
+        color: #FFD93D;
+    }
+
+    .header-btn svg {
+        width: 14px;
+        height: 14px;
     }
 
     .logout-btn {
-        padding: 8px 20px;
+        padding: 8px 16px;
         background: #FFD93D;
         color: #1a1a1a;
         border: none;
         border-radius: 6px;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
@@ -68,6 +100,196 @@
     .logout-btn:hover {
         background: #ffc107;
         transform: translateY(-2px);
+    }
+
+    /* History Panel (slide-down overlay) */
+    .history-panel {
+        display: none;
+        position: fixed;
+        top: 60px;
+        right: 20px;
+        width: 340px;
+        max-height: 420px;
+        background: #1e1e1e;
+        border: 1px solid #444;
+        border-radius: 10px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        z-index: 1000;
+        overflow: hidden;
+    }
+
+    .history-panel.show {
+        display: block;
+        animation: fadeSlide 0.2s ease;
+    }
+
+    @keyframes fadeSlide {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .history-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid #333;
+    }
+
+    .history-panel-header h3 {
+        font-size: 14px;
+        color: #FFD93D;
+        font-weight: 600;
+    }
+
+    .history-panel-header button {
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 0 4px;
+    }
+
+    .history-panel-header button:hover {
+        color: #fff;
+    }
+
+    .history-list {
+        overflow-y: auto;
+        max-height: 360px;
+        padding: 8px;
+    }
+
+    .history-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s;
+        border: 1px solid transparent;
+        margin-bottom: 4px;
+    }
+
+    .history-item:hover {
+        background: #2a2a2a;
+        border-color: #444;
+    }
+
+    .history-item.active {
+        border-color: #FFD93D;
+        background: rgba(255, 217, 61, 0.08);
+    }
+
+    .history-item .hi-icon {
+        width: 32px;
+        height: 32px;
+        background: #333;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: #FFD93D;
+        font-size: 14px;
+    }
+
+    .history-item.active .hi-icon {
+        background: rgba(255, 217, 61, 0.15);
+    }
+
+    .history-item .hi-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .history-item .hi-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #ddd;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .history-item .hi-time {
+        font-size: 11px;
+        color: #666;
+        margin-top: 2px;
+    }
+
+    .history-item .hi-actions {
+        flex-shrink: 0;
+    }
+
+    .history-item .hi-actions button {
+        padding: 4px 8px;
+        border: none;
+        border-radius: 4px;
+        background: #333;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 11px;
+        transition: all 0.15s;
+    }
+
+    .history-item .hi-actions button:hover {
+        background: #ff4444;
+        color: #fff;
+    }
+
+    .history-empty {
+        text-align: center;
+        padding: 24px 16px;
+        color: #555;
+        font-size: 13px;
+        font-style: italic;
+    }
+
+    /* Plot Name Input above accordion */
+    .plot-name-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: #1e1e1e;
+        border: 1px solid #333;
+        border-radius: 10px;
+        margin-bottom: 12px;
+    }
+
+    .plot-name-bar label {
+        font-size: 11px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        font-weight: 600;
+    }
+
+    .plot-name-bar input {
+        flex: 1;
+        background: #1f1f1f;
+        border: 1px solid #444;
+        border-radius: 8px;
+        padding: 8px 12px;
+        color: #FFD93D;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        transition: border-color 0.3s;
+    }
+
+    .plot-name-bar input:focus {
+        outline: none;
+        border-color: #FFD93D;
+        background: rgba(255, 217, 61, 0.05);
+    }
+
+    .plot-name-bar input::placeholder {
+        color: #555;
     }
 
     /* Main Container */
@@ -444,7 +666,7 @@
         padding-bottom: 4px;
     }
 
-    button.btn-draw, button.btn-pdf {
+    .button-group button {
         flex: 1;
         padding: 12px 16px;
         border: none;
@@ -452,22 +674,27 @@
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
+        gap: 8px;
     }
 
-    .btn-draw {
+    .btn-save {
         background: #FFD93D;
         color: #1a1a1a;
     }
 
-    .btn-draw:hover {
+    .btn-save:hover {
         background: #ffc107;
         transform: translateY(-1px);
         box-shadow: 0 4px 15px rgba(255, 217, 61, 0.3);
+    }
+
+    .btn-save:active {
+        transform: translateY(0);
+        box-shadow: none;
     }
 
     .btn-pdf {
@@ -481,15 +708,20 @@
         box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
     }
 
+    .btn-pdf:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+
+    /* (Saved plots list moved to history panel) */
+
     /* Canvas Container */
     .canvas-container {
         flex: 1;
         background: #1a1a1a;
         padding: 40px;
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
         overflow: auto;
+        touch-action: pan-x pan-y;
     }
 
     .canvas-container::-webkit-scrollbar {
@@ -511,8 +743,9 @@
     }
 
     .canvas-wrapper {
-        transform-origin: top center;
+        transform-origin: top left;
         display: inline-block;
+        margin: 0 auto;
     }
 
     #mapSvg {
@@ -547,23 +780,91 @@
         min-height: 20px;
     }
 
-    /* Responsive - Tablet */
+    /* Mobile Tab Bar */
+    .mobile-tab-bar {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 58px;
+        background: #0d0d0d;
+        border-top: 1px solid #444;
+        z-index: 999;
+        padding: 0;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+    }
+
+    .mobile-tab-bar .tab-btns {
+        display: flex;
+    }
+
+    .mobile-tab-bar .tab-btn {
+        flex: 1;
+        padding: 10px 0;
+        background: none;
+        border: none;
+        color: #888;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        transition: color 0.2s;
+    }
+
+    .mobile-tab-bar .tab-btn.active {
+        color: #FFD93D;
+    }
+
+    .mobile-tab-bar .tab-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Responsive - Tablet & Mobile */
     @media (max-width: 1024px) {
+        .mobile-tab-bar {
+            display: block;
+        }
+
         .main-container {
             flex-direction: column;
-            height: auto;
+            height: calc(100vh - 61px - 58px); /* header + tab bar */
+            overflow: hidden;
         }
 
         .controls-panel {
             width: 100%;
             max-height: none;
             border-right: none;
-            border-bottom: 1px solid #333;
+            height: 100%;
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+
+        .controls-panel.mobile-hidden {
+            display: none;
         }
 
         .canvas-container {
-            padding: 20px;
-            min-height: 500px;
+            height: 100%;
+            padding: 16px;
+            min-height: unset;
+            overflow: auto;
+        }
+
+        .canvas-container.mobile-hidden {
+            display: none;
+        }
+
+        .history-panel {
+            right: 10px;
+            left: 10px;
+            width: auto;
         }
     }
 
@@ -578,16 +879,25 @@
         }
 
         .header-right {
-            gap: 10px;
+            gap: 6px;
         }
 
         .user-email {
             display: none;
         }
 
+        .header-btn {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .header-btn span.btn-label {
+            display: none;
+        }
+
         .logout-btn {
-            padding: 6px 14px;
-            font-size: 13px;
+            padding: 6px 12px;
+            font-size: 12px;
         }
 
         .controls-panel {
@@ -631,13 +941,20 @@
         }
 
         .button-group {
-            flex-direction: column;
-            gap: 8px;
+            display: none;
         }
 
         .canvas-container {
             padding: 10px;
-            min-height: 400px;
+        }
+
+        .plot-name-bar {
+            padding: 8px 12px;
+        }
+
+        .plot-name-bar input {
+            font-size: 13px;
+            padding: 6px 10px;
         }
     }
 </style>
@@ -646,10 +963,43 @@
 
 <!-- Header -->
 <div class="header">
-    <div class="logo">LOGO</div>
+    <div class="logo">RRD PLANERS</div>
     <div class="header-right">
         <span class="user-email" id="userEmail">user@email.com</span>
+        <button class="header-btn" onclick="newPlot()" title="New Plot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btn-label"> New</span></button>
+        <button class="header-btn" id="historyBtn" onclick="toggleHistory()" title="History"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="btn-label"> History</span></button>
         <button class="logout-btn" onclick="handleLogout()">Logout</button>
+    </div>
+</div>
+
+<!-- History Panel -->
+<div class="history-panel" id="historyPanel">
+    <div class="history-panel-header">
+        <h3>Saved Plots</h3>
+        <button onclick="toggleHistory()">&times;</button>
+    </div>
+    <div class="history-list" id="historyList"></div>
+</div>
+
+<!-- Mobile Tab Bar -->
+<div class="mobile-tab-bar" id="mobileTabBar">
+    <div class="tab-btns">
+        <button class="tab-btn active" id="tabControls" onclick="switchMobileTab('controls')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/><circle cx="12" cy="12" r="4"/></svg>
+            Controls
+        </button>
+        <button class="tab-btn" id="tabPreview" onclick="switchMobileTab('preview')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            Preview
+        </button>
+        <button class="tab-btn" id="tabSave" onclick="savePlot()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save
+        </button>
+        <button class="tab-btn" id="tabDownload" onclick="downloadPDF()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            PDF
+        </button>
     </div>
 </div>
 
@@ -658,6 +1008,12 @@
     <!-- Controls Panel -->
     <div class="controls-panel">
         <h2>Plot Map Generator</h2>
+
+        <!-- Plot Name -->
+        <div class="plot-name-bar">
+            <label>Plot</label>
+            <input type="text" id="plotName" placeholder="Plot name..." value="Plot 1" onchange="updatePlotName()">
+        </div>
 
         <!-- 1. Header Info (Title, Vendor, Vendees) — maps to Zone 1 -->
         <div class="section open" id="sec-header">
@@ -796,7 +1152,9 @@
                             </div>
                         </div>
                     </div>
-                    <label class="form-label" style="margin-top:8px">Plinth Area (Sq.Fts)</label>
+                    <label class="form-label" style="margin-top:8px">Building Type</label>
+                    <input id="building_type" type="text" value="A.C.C ROOF">
+                    <label class="form-label">Plinth Area (Sq.Fts)</label>
                     <input id="plinth" type="number" value="100" step="0.01">
                 </div>
             </div>
@@ -859,7 +1217,7 @@
         </div>
 
         <div class="button-group">
-            <button class="btn-draw" onclick="drawMap()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg> Draw Map</button>
+            <button class="btn-save" onclick="savePlot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Plot</button>
             <button class="btn-pdf" onclick="downloadPDF()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF</button>
         </div>
     </div>
@@ -928,6 +1286,7 @@ function saveFormData() {
         west_txt: document.getElementById('west_txt').value,
         plot_center_txt: document.getElementById('plot_center_txt').value,
         open_area_txt: document.getElementById('open_area_txt').value,
+        building_type: document.getElementById('building_type').value,
         plinth: document.getElementById('plinth').value,
         wit1: document.getElementById('wit1').value,
         wit2: document.getElementById('wit2').value,
@@ -957,7 +1316,7 @@ function loadFormData() {
 
         var textFields = ['road_direction','road_text','title','vendor','vendees',
             'north_txt','south_txt','east_txt','west_txt',
-            'plot_center_txt','open_area_txt','plinth','wit1','wit2'];
+            'plot_center_txt','open_area_txt','building_type','plinth','wit1','wit2'];
         textFields.forEach(function(id) {
             if (data[id] !== undefined) document.getElementById(id).value = data[id];
         });
@@ -1090,9 +1449,65 @@ function resetZoom() {
 
 function applyZoom() {
     var wrapper = document.getElementById('canvasWrapper');
+    var svg = document.getElementById('mapSvg');
     var s = currentZoom / 100;
-    wrapper.style.transform = 'scale(' + s + ')';
+    var w = parseFloat(svg.getAttribute('width')) || 793;
+    var h = parseFloat(svg.getAttribute('height')) || 1122;
+    // Use CSS width/height on SVG to scale it (no transform needed)
+    svg.style.width = (w * s) + 'px';
+    svg.style.height = (h * s) + 'px';
+    // Clear any transform
+    wrapper.style.transform = '';
+    wrapper.style.width = '';
+    wrapper.style.height = '';
 }
+
+// ==================== PINCH TO ZOOM ====================
+(function() {
+    var container = document.querySelector('.canvas-container');
+    if (!container) return;
+
+    var lastDist = 0;
+    var pinching = false;
+
+    container.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 2) {
+            pinching = true;
+            lastDist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    container.addEventListener('touchmove', function(e) {
+        if (pinching && e.touches.length === 2) {
+            var dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            var delta = dist - lastDist;
+            if (Math.abs(delta) > 5) {
+                var step = delta > 0 ? 5 : -5;
+                currentZoom = Math.max(20, Math.min(200, currentZoom + step));
+                document.getElementById('zoom_value').textContent = currentZoom + '%';
+                applyZoom();
+                lastDist = dist;
+            }
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    container.addEventListener('touchend', function(e) {
+        if (e.touches.length < 2) {
+            if (pinching) {
+                pinching = false;
+                scheduleSave();
+            }
+        }
+    });
+})();
 
 // ==================== TEXT SIZE CONTROLS ====================
 function adjustSize(type, delta) {
@@ -1786,13 +2201,30 @@ function drawMap() {
 
     // Area details
     var areaY = inclY + lineGap + 2;
-    svgText(layerText, 'TOTAL AREA  : ' + area.sqft.toFixed(2) + ' Sq.Fts', refBoxX, areaY, fs, {});
-    svgText(layerText, '                       : ' + area.sqyd.toFixed(2) + ' Sq.Yds', refBoxX, areaY + lineGap, fs, {});
-    svgText(layerText, '             ( OR )  : ' + area.sqm.toFixed(2) + ' Sq.Mtrs', refBoxX, areaY + lineGap * 2, fs, {});
+    // Area details — aligned columns: label | colon | value
+    var areaLabelX = refBoxX;
+    var areaColonX = refBoxX + svgMeasureText('TOTAL AREA', fs) + 6;
+    var areaValueX = areaColonX + svgMeasureText(': ', fs) + 2;
+
+    svgText(layerText, 'TOTAL AREA', areaLabelX, areaY, fs, {});
+    svgText(layerText, ':', areaColonX, areaY, fs, {});
+    svgText(layerText, area.sqft.toFixed(2) + ' Sq.Fts', areaValueX, areaY, fs, {});
+
+    svgText(layerText, ':', areaColonX, areaY + lineGap, fs, {});
+    svgText(layerText, area.sqyd.toFixed(2) + ' Sq.Yds', areaValueX, areaY + lineGap, fs, {});
+
+    svgText(layerText, '( OR )', areaLabelX, areaY + lineGap * 2, fs, {});
+    svgText(layerText, ':', areaColonX, areaY + lineGap * 2, fs, {});
+    svgText(layerText, area.sqm.toFixed(2) + ' Sq.Mtrs', areaValueX, areaY + lineGap * 2, fs, {});
 
     var plinthArea = parseFloat(document.getElementById('plinth').value) || 0;
-    svgText(layerText, 'A.C.C ROOF', refBoxX, areaY + lineGap * 3 + 2, fs, {});
-    svgText(layerText, 'PLINTH AREA : ' + plinthArea.toFixed(2) + ' Sq.Fts.', refBoxX, areaY + lineGap * 4 + 2, fs, {
+    var buildingType = document.getElementById('building_type').value.toUpperCase();
+    svgText(layerText, buildingType, areaLabelX, areaY + lineGap * 3 + 2, fs, {
+        className: 'editable', dataField: 'building_type'
+    });
+    svgText(layerText, 'PLINTH AREA', areaLabelX, areaY + lineGap * 4 + 2, fs, {});
+    svgText(layerText, ':', areaColonX, areaY + lineGap * 4 + 2, fs, {});
+    svgText(layerText, plinthArea.toFixed(2) + ' Sq.Fts.', areaValueX, areaY + lineGap * 4 + 2, fs, {
         className: 'editable', dataField: 'plinth'
     });
 
@@ -1884,6 +2316,7 @@ var fieldToSection = {
     road_text: 'sec-boundaries',
     plot_center_txt: 'sec-interior',
     open_area_txt: 'sec-interior',
+    building_type: 'sec-interior',
     plinth: 'sec-interior',
     wit1: 'sec-footer',
     wit2: 'sec-footer'
@@ -1891,15 +2324,17 @@ var fieldToSection = {
 
 (function() {
     var svgEl = document.getElementById('mapSvg');
-    svgEl.addEventListener('dblclick', function(e) {
-        var target = e.target.closest('text.editable');
-        if (!target) return;
-
+    function handleEditableTap(target) {
         var field = target.getAttribute('data-field');
         if (!field) return;
 
         var inputEl = document.getElementById(field);
         if (!inputEl) return;
+
+        // On mobile, switch to controls tab first
+        if (window.innerWidth <= 1024) {
+            switchMobileTab('controls');
+        }
 
         // Open the corresponding accordion section if closed
         var sectionId = fieldToSection[field];
@@ -1910,22 +2345,411 @@ var fieldToSection = {
             }
         }
 
-        // Small delay to let section expand, then scroll and focus
+        // Delay to let tab switch + section expand, then scroll and focus
         setTimeout(function() {
             inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             inputEl.focus();
             if (inputEl.select) inputEl.select();
 
-            // Highlight the input briefly
             inputEl.style.borderColor = '#FFD93D';
             inputEl.style.boxShadow = '0 0 8px rgba(255, 217, 61, 0.5)';
             setTimeout(function() {
                 inputEl.style.borderColor = '';
                 inputEl.style.boxShadow = '';
             }, 2000);
-        }, 200);
+        }, 300);
+    }
+
+    // Desktop: dblclick
+    svgEl.addEventListener('dblclick', function(e) {
+        var target = e.target.closest('text.editable');
+        if (!target) return;
+        handleEditableTap(target);
+    });
+
+    // Mobile: double-tap detection
+    var lastTap = 0;
+    var lastTarget = null;
+    svgEl.addEventListener('touchend', function(e) {
+        var target = e.target.closest('text.editable');
+        if (!target) {
+            lastTap = 0;
+            lastTarget = null;
+            return;
+        }
+
+        var now = Date.now();
+        if (lastTarget === target && now - lastTap < 400) {
+            e.preventDefault();
+            handleEditableTap(target);
+            lastTap = 0;
+            lastTarget = null;
+        } else {
+            lastTap = now;
+            lastTarget = target;
+        }
     });
 })();
+
+// ==================== SAVED PLOTS MANAGEMENT ====================
+var PLOTS_KEY = 'plotGenerator_savedPlots';
+var ACTIVE_PLOT_KEY = 'plotGenerator_activePlot';
+
+function getSavedPlots() {
+    try {
+        return JSON.parse(localStorage.getItem(PLOTS_KEY)) || [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function setSavedPlots(plots) {
+    localStorage.setItem(PLOTS_KEY, JSON.stringify(plots));
+}
+
+function getActivePlotId() {
+    return localStorage.getItem(ACTIVE_PLOT_KEY) || null;
+}
+
+function setActivePlotId(id) {
+    localStorage.setItem(ACTIVE_PLOT_KEY, id);
+}
+
+function collectFormData() {
+    return {
+        mode: getMode(),
+        n_ft: document.getElementById('n_ft').value,
+        n_in: document.getElementById('n_in').value,
+        s_ft: document.getElementById('s_ft').value,
+        s_in: document.getElementById('s_in').value,
+        e_ft: document.getElementById('e_ft').value,
+        e_in: document.getElementById('e_in').value,
+        w_ft: document.getElementById('w_ft').value,
+        w_in: document.getElementById('w_in').value,
+        road_direction: document.getElementById('road_direction').value,
+        road_text: document.getElementById('road_text').value,
+        title: document.getElementById('title').value,
+        vendor: document.getElementById('vendor').value,
+        vendees: document.getElementById('vendees').value,
+        north_txt: document.getElementById('north_txt').value,
+        south_txt: document.getElementById('south_txt').value,
+        east_txt: document.getElementById('east_txt').value,
+        west_txt: document.getElementById('west_txt').value,
+        plot_center_txt: document.getElementById('plot_center_txt').value,
+        open_area_txt: document.getElementById('open_area_txt').value,
+        building_type: document.getElementById('building_type').value,
+        plinth: document.getElementById('plinth').value,
+        wit1: document.getElementById('wit1').value,
+        wit2: document.getElementById('wit2').value,
+        showInterior: document.getElementById('showInterior').checked,
+        textSizes: JSON.parse(JSON.stringify(textSizes)),
+        zoom: currentZoom
+    };
+}
+
+function applyFormData(data) {
+    if (data.mode === 'trapezoid') {
+        document.getElementById('modeTrap').checked = true;
+    } else {
+        document.getElementById('modeRect').checked = true;
+    }
+
+    var dimFields = ['n_ft','n_in','s_ft','s_in','e_ft','e_in','w_ft','w_in'];
+    dimFields.forEach(function(id) {
+        if (data[id] !== undefined) document.getElementById(id).value = data[id];
+    });
+
+    var textFields = ['road_direction','road_text','title','vendor','vendees',
+        'north_txt','south_txt','east_txt','west_txt',
+        'plot_center_txt','open_area_txt','building_type','plinth','wit1','wit2'];
+    textFields.forEach(function(id) {
+        if (data[id] !== undefined) document.getElementById(id).value = data[id];
+    });
+
+    if (data.showInterior !== undefined) {
+        document.getElementById('showInterior').checked = data.showInterior;
+    }
+
+    if (data.textSizes) {
+        for (var key in data.textSizes) {
+            if (textSizes.hasOwnProperty(key)) {
+                var val = data.textSizes[key];
+                if (key === 'title') val = Math.max(12, Math.min(18, val));
+                else val = Math.max(10, Math.min(14, val));
+                textSizes[key] = val;
+            }
+        }
+    }
+
+    if (data.zoom) {
+        currentZoom = data.zoom;
+        document.getElementById('zoom_value').textContent = currentZoom + '%';
+        applyZoom();
+    }
+
+    updateModeUI();
+    initBodySizeDisplay();
+    drawMap();
+}
+
+function generatePlotName() {
+    // Use whatever is in the plot name input
+    var name = document.getElementById('plotName').value.trim();
+    if (name) return name;
+    // Auto-generate "Plot N"
+    var plots = getSavedPlots();
+    return 'Plot ' + (plots.length + 1);
+}
+
+function getNextPlotNumber() {
+    var plots = getSavedPlots();
+    var maxNum = 0;
+    for (var i = 0; i < plots.length; i++) {
+        var match = plots[i].name.match(/^Plot (\d+)$/);
+        if (match) maxNum = Math.max(maxNum, parseInt(match[1]));
+    }
+    return maxNum + 1;
+}
+
+function toggleHistory() {
+    var panel = document.getElementById('historyPanel');
+    var btn = document.getElementById('historyBtn');
+    if (panel.classList.contains('show')) {
+        panel.classList.remove('show');
+        btn.classList.remove('active');
+    } else {
+        renderPlotList();
+        panel.classList.add('show');
+        btn.classList.add('active');
+    }
+}
+
+function updatePlotName() {
+    var activeId = getActivePlotId();
+    if (!activeId) return;
+    var plots = getSavedPlots();
+    var name = document.getElementById('plotName').value.trim();
+    if (!name) return;
+    for (var i = 0; i < plots.length; i++) {
+        if (plots[i].id === activeId) {
+            plots[i].name = name;
+            setSavedPlots(plots);
+            break;
+        }
+    }
+}
+
+// ==================== MOBILE TAB SWITCHING ====================
+function switchMobileTab(tab) {
+    var controls = document.querySelector('.controls-panel');
+    var canvas = document.querySelector('.canvas-container');
+    var tabControls = document.getElementById('tabControls');
+    var tabPreview = document.getElementById('tabPreview');
+
+    if (tab === 'controls') {
+        controls.classList.remove('mobile-hidden');
+        canvas.classList.add('mobile-hidden');
+        tabControls.classList.add('active');
+        tabPreview.classList.remove('active');
+    } else {
+        controls.classList.add('mobile-hidden');
+        canvas.classList.remove('mobile-hidden');
+        tabControls.classList.remove('active');
+        tabPreview.classList.add('active');
+        // Redraw to ensure SVG renders correctly after becoming visible
+        setTimeout(function() { drawMap(); }, 50);
+    }
+}
+
+// Close history panel when clicking outside
+document.addEventListener('click', function(e) {
+    var panel = document.getElementById('historyPanel');
+    var btn = document.getElementById('historyBtn');
+    if (panel && panel.classList.contains('show') && !panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+        panel.classList.remove('show');
+        btn.classList.remove('active');
+    }
+});
+
+function savePlot() {
+    try {
+        var plots = getSavedPlots();
+        var activeId = getActivePlotId();
+        var data = collectFormData();
+        var now = new Date().toISOString();
+        var plotNameInput = document.getElementById('plotName');
+        var name = plotNameInput.value.trim() || ('Plot ' + getNextPlotNumber());
+        var entry;
+
+        if (activeId) {
+            var found = false;
+            for (var i = 0; i < plots.length; i++) {
+                if (plots[i].id === activeId) {
+                    plots[i].data = data;
+                    plots[i].name = name;
+                    plots[i].updatedAt = now;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                entry = { id: 'plot_' + Date.now(), name: name, data: data, createdAt: now, updatedAt: now };
+                plots.unshift(entry);
+                setActivePlotId(entry.id);
+            }
+        } else {
+            entry = { id: 'plot_' + Date.now(), name: name, data: data, createdAt: now, updatedAt: now };
+            plots.unshift(entry);
+            setActivePlotId(entry.id);
+        }
+
+        plotNameInput.value = name;
+        setSavedPlots(plots);
+        saveFormData();
+        renderPlotList();
+
+        // Brief visual feedback — desktop button
+        var btn = document.querySelector('.btn-save');
+        if (btn) {
+            var origText = btn.innerHTML;
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Saved!';
+            btn.style.background = '#28a745';
+            btn.style.color = '#fff';
+            setTimeout(function() {
+                btn.innerHTML = origText;
+                btn.style.background = '';
+                btn.style.color = '';
+            }, 1500);
+        }
+
+        // Mobile tab bar feedback
+        var tabBtn = document.getElementById('tabSave');
+        if (tabBtn) {
+            var origTab = tabBtn.innerHTML;
+            tabBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Saved!';
+            tabBtn.style.color = '#28a745';
+            setTimeout(function() {
+                tabBtn.innerHTML = origTab;
+                tabBtn.style.color = '';
+            }, 1500);
+        }
+    } catch (err) {
+        alert('Save failed: ' + err.message);
+        console.error('savePlot error:', err);
+    }
+}
+
+function loadPlot(id) {
+    var plots = getSavedPlots();
+    for (var i = 0; i < plots.length; i++) {
+        if (plots[i].id === id) {
+            setActivePlotId(id);
+            document.getElementById('plotName').value = plots[i].name;
+            applyFormData(plots[i].data);
+            saveFormData();
+            renderPlotList();
+            toggleHistory(); // close panel after selection
+            return;
+        }
+    }
+}
+
+function deletePlot(id) {
+    if (!confirm('Delete this saved plot?')) return;
+    var plots = getSavedPlots();
+    plots = plots.filter(function(p) { return p.id !== id; });
+    setSavedPlots(plots);
+
+    if (getActivePlotId() === id) {
+        setActivePlotId(null);
+    }
+    renderPlotList();
+}
+
+function newPlot() {
+    if (!confirm('Start a new blank plot? (Current unsaved changes will be lost)')) return;
+
+    // Set new plot name
+    document.getElementById('plotName').value = 'Plot ' + getNextPlotNumber();
+
+    // Reset all fields to defaults
+    document.getElementById('modeRect').checked = true;
+    document.getElementById('n_ft').value = '30';
+    document.getElementById('n_in').value = '0';
+    document.getElementById('s_ft').value = '30';
+    document.getElementById('s_in').value = '0';
+    document.getElementById('e_ft').value = '50';
+    document.getElementById('e_in').value = '0';
+    document.getElementById('w_ft').value = '50';
+    document.getElementById('w_in').value = '0';
+    document.getElementById('road_direction').value = 'south';
+    document.getElementById('road_text').value = '( SOUTH ) ROAD';
+    document.getElementById('title').value = '';
+    document.getElementById('vendor').value = '';
+    document.getElementById('vendees').value = '';
+    document.getElementById('north_txt').value = '';
+    document.getElementById('south_txt').value = '';
+    document.getElementById('east_txt').value = '';
+    document.getElementById('west_txt').value = '';
+    document.getElementById('plot_center_txt').value = 'ROOM';
+    document.getElementById('open_area_txt').value = 'OPEN AREA';
+    document.getElementById('building_type').value = 'A.C.C ROOF';
+    document.getElementById('plinth').value = '0';
+    document.getElementById('wit1').value = '';
+    document.getElementById('wit2').value = '';
+    document.getElementById('showInterior').checked = true;
+
+    setActivePlotId(null);
+    updateModeUI();
+    drawMap();
+    saveFormData();
+    renderPlotList();
+}
+
+function formatDate(isoStr) {
+    var d = new Date(isoStr);
+    var day = d.getDate().toString().padStart(2, '0');
+    var mon = (d.getMonth() + 1).toString().padStart(2, '0');
+    var yr = d.getFullYear();
+    var hr = d.getHours().toString().padStart(2, '0');
+    var min = d.getMinutes().toString().padStart(2, '0');
+    return day + '/' + mon + '/' + yr + ' ' + hr + ':' + min;
+}
+
+function renderPlotList() {
+    var container = document.getElementById('historyList');
+    if (!container) return;
+    var plots = getSavedPlots();
+    var activeId = getActivePlotId();
+
+    if (plots.length === 0) {
+        container.innerHTML = '<div class="history-empty">No saved plots yet.<br>Click "Save Plot" to save your work.</div>';
+        return;
+    }
+
+    var html = '';
+    for (var i = 0; i < plots.length; i++) {
+        var p = plots[i];
+        var isActive = p.id === activeId;
+        html += '<div class="history-item' + (isActive ? ' active' : '') + '" onclick="loadPlot(\'' + p.id + '\')">';
+        html += '<div class="hi-icon">' + (i + 1) + '</div>';
+        html += '<div class="hi-info">';
+        html += '<div class="hi-name">' + escapeHtml(p.name) + '</div>';
+        html += '<div class="hi-time">' + formatDate(p.updatedAt || p.createdAt) + '</div>';
+        html += '</div>';
+        html += '<div class="hi-actions">';
+        html += '<button onclick="event.stopPropagation(); deletePlot(\'' + p.id + '\')" title="Delete">&#x2715;</button>';
+        html += '</div>';
+        html += '</div>';
+    }
+    container.innerHTML = html;
+}
+
+function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
 
 // ==================== INITIALIZATION ====================
 window.addEventListener('load', function() {
@@ -1936,10 +2760,30 @@ window.addEventListener('load', function() {
         applyZoom();
     }
 
+    // Set plot name from active plot or default
+    var activeId = getActivePlotId();
+    if (activeId) {
+        var plots = getSavedPlots();
+        for (var i = 0; i < plots.length; i++) {
+            if (plots[i].id === activeId) {
+                document.getElementById('plotName').value = plots[i].name;
+                break;
+            }
+        }
+    } else {
+        document.getElementById('plotName').value = 'Plot ' + getNextPlotNumber();
+    }
+
     updateModeUI();
     initBodySizeDisplay();
     drawMap();
     saveFormData();
+
+    // Mobile: default to controls tab, hide preview
+    if (window.innerWidth <= 1024) {
+        var canvas = document.querySelector('.canvas-container');
+        if (canvas) canvas.classList.add('mobile-hidden');
+    }
 });
 </script>
 
