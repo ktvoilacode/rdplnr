@@ -1027,13 +1027,15 @@
                     <label class="form-label">Title / Description</label>
                     <textarea id="title" placeholder="Enter plot title..." rows="3">PLAN SHOWING THE A.C.C ROOF HOUSE WITH OPEN PLACE BEARING G.W.M.C H.NO.31-1-85(PART), SITUATED AT KOMATIPALLY VILLAGE, HASANPARTHY MANDAL, HANUMAKONDA DISTRICT, WITHIN THE LIMITS OF GREATER WARANGAL MUNICIPAL CORPORATION.</textarea>
 
-                    <label class="form-label">Vendor</label>
-                    <input id="vendor" type="text" value="PADIDA VENKATALAXMI, W/o. AILAIAH @ PADIDELA ILAIAH">
+                    <label class="form-label">Vendor Label</label>
+                    <input id="vendor_label" type="text" value="VENDOR">
+                    <label class="form-label">Vendor Data (one per line)</label>
+                    <textarea id="vendor" rows="3">1) PADIDA VENKATALAXMI, W/o. AILAIAH @ PADIDELA ILAIAH</textarea>
 
-                    <label class="form-label">Rep. By (optional)</label>
-                    <textarea id="rep_by" rows="2" placeholder="M/s. COMPANY NAME,&#10;REP.BY NAME W/o. ..."></textarea>
-
-                    <label class="form-label">Vendees (one per line)</label>
+                    <div style="border-top: 1px solid #333; margin: 10px 0;"></div>
+                    <label class="form-label">Vendee Label</label>
+                    <input id="vendee_label" type="text" value="VENDEE">
+                    <label class="form-label">Vendee Data (one per line)</label>
                     <textarea id="vendees" rows="2">1.PARDALA MOHAN, S/o. PARDALA MOGILI
 2.PADIDALA RAJINIKANTH, S/o. PADIDALA MOGILI</textarea>
                 </div>
@@ -1086,6 +1088,42 @@
                         </div>
                     </div>
                     <div class="synced-hint" id="syncHint">S and W are auto-synced in Rectangle mode</div>
+                    <div id="trapHelpNote" style="display:none;margin-top:8px;font-size:11px;color:#aaa;align-items:center;gap:6px;">
+                        <span>Alignment options appear when dimensions differ.</span>
+                        <button type="button" onclick="showTrapHelp()" style="background:none;border:1px solid #FFD93D;color:#FFD93D;border-radius:4px;font-size:11px;cursor:pointer;padding:2px 8px;white-space:nowrap;">View Examples</button>
+                    </div>
+
+                    <div id="trapAlignHRow" style="margin-top: 10px; display:none;">
+                        <label class="form-label">Extension Direction (N ≠ S)</label>
+                        <select id="trap_align">
+                            <option value="left">Left-aligned (left wall vertical)</option>
+                            <option value="right">Right-aligned (right wall vertical)</option>
+                            <option value="center">Center (equal both sides)</option>
+                            <option value="custom">Custom offset</option>
+                        </select>
+                        <div id="trapCustomHRow" style="display:none;margin-top:6px;">
+                            <label class="form-label">Left offset (ft)</label>
+                            <input id="trap_offset_h" type="number" value="0" min="0" step="0.5" style="width:80px;">
+                        </div>
+                    </div>
+                    <div id="trapAlignVRow" style="margin-top: 10px; display:none;">
+                        <label class="form-label">Extension Direction (E ≠ W)</label>
+                        <select id="trap_valign">
+                            <option value="bottom">Bottom-aligned (bottom edge flat)</option>
+                            <option value="top">Top-aligned (top edge flat)</option>
+                            <option value="center">Center (equal both sides)</option>
+                            <option value="custom">Custom offset</option>
+                        </select>
+                        <div id="trapCustomVRow" style="display:none;margin-top:6px;">
+                            <label class="form-label">Bottom offset (ft)</label>
+                            <input id="trap_offset_v" type="number" value="0" min="0" step="0.5" style="width:80px;">
+                        </div>
+                    </div>
+
+                    <div class="toggle-row" style="margin-top: 10px;">
+                        <label class="form-label" style="margin-bottom:0">Dimensions Outside</label>
+                        <label class="switch"><input type="checkbox" id="dims_outside"><span class="slider"></span></label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1125,6 +1163,16 @@
                             <input id="road_text" type="text" value="( SOUTH ) ROAD">
                         </div>
                     </div>
+                    <div class="form-row" style="margin-top: 6px;">
+                        <div class="form-group">
+                            <label class="form-label">Road Width (ft)</label>
+                            <input id="road_width" type="number" value="30" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Road Number</label>
+                            <input id="road_number" type="text" placeholder="e.g. NO.4">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1141,6 +1189,41 @@
                     <input id="plot_center_txt" type="text" value="PLOT NO.32">
                     <input id="open_area_txt" type="hidden" value="">
                     <input id="showInterior" type="hidden" value="true">
+
+                    <div class="toggle-row" style="margin-top: 8px;">
+                        <label class="form-label" style="margin-bottom:0">Show Area in Plot</label>
+                        <label class="switch"><input type="checkbox" id="show_area_in_plot"><span class="slider"></span></label>
+                    </div>
+
+                    <div class="toggle-row" style="margin-top: 8px;">
+                        <label class="form-label" style="margin-bottom:0">Show Room</label>
+                        <label class="switch"><input type="checkbox" id="show_room"><span class="slider"></span></label>
+                    </div>
+                    <div id="room_fields" style="display:none; margin-top: 8px;">
+                        <label class="form-label">Room Label</label>
+                        <input id="room_label" type="text" value="ROOM">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Room Width</label>
+                                <div class="dimension-input">
+                                    <input id="room_w_ft" type="number" value="10" min="0" style="width:42px">
+                                    <span>ft</span>
+                                    <input id="room_w_in" type="number" value="0" min="0" max="11" style="width:42px">
+                                    <span>in</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Room Height</label>
+                                <div class="dimension-input">
+                                    <input id="room_h_ft" type="number" value="10" min="0" style="width:42px">
+                                    <span>ft</span>
+                                    <input id="room_h_in" type="number" value="0" min="0" max="11" style="width:42px">
+                                    <span>in</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <label class="form-label" style="margin-top:8px">Building Type</label>
                     <input id="building_type" type="text" value="A.C.C ROOF">
                     <label class="form-label">Plinth Area (Sq.Fts)</label>
@@ -1157,6 +1240,11 @@
             </div>
             <div class="section-body">
                 <div class="section-content">
+                    <label class="form-label">Signature Label 1</label>
+                    <input id="sig_label_1" type="text" value="SIGNATURE OF VENDOR">
+                    <label class="form-label">Signature Label 2</label>
+                    <input id="sig_label_2" type="text" value="SIGNATURE OF VENDEE">
+                    <div style="border-top: 1px solid #333; margin: 10px 0;"></div>
                     <label class="form-label">Witness 1</label>
                     <input id="wit1" type="text" placeholder="Full name">
                     <label class="form-label">Witness 2</label>
@@ -1199,6 +1287,36 @@
                             <button onclick="adjustBodySize(-1)">-</button>
                             <span class="size-value" id="body_size">11px</span>
                             <button onclick="adjustBodySize(1)">+</button>
+                        </div>
+                    </div>
+
+                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;">Plot Position</label>
+                    <div class="control-row"><label>Vertical</label><div class="btn-group"><button onclick="adjustPlotPos('y',-5)">&#x25B2;</button><span class="size-value" id="plot_pos_y">0</span><button onclick="adjustPlotPos('y',5)">&#x25BC;</button></div></div>
+                    <div class="control-row"><label>Horizontal</label><div class="btn-group"><button onclick="adjustPlotPos('x',-5)">&#x25C0;</button><span class="size-value" id="plot_pos_x">0</span><button onclick="adjustPlotPos('x',5)">&#x25B6;</button></div></div>
+
+                    <div class="control-row"><label>Size</label><div class="btn-group"><button onclick="adjustPlotScale(-5)">-</button><span class="size-value" id="plot_scale_val">0</span><button onclick="adjustPlotScale(5)">+</button></div></div>
+
+                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;">Side Label Offsets</label>
+                    <div class="control-row"><label>North</label><div class="btn-group"><button onclick="adjustSideOffset('N',-5)">-</button><span class="size-value" id="side_off_N">0</span><button onclick="adjustSideOffset('N',5)">+</button></div></div>
+                    <div class="control-row"><label>South</label><div class="btn-group"><button onclick="adjustSideOffset('S',-5)">-</button><span class="size-value" id="side_off_S">0</span><button onclick="adjustSideOffset('S',5)">+</button></div></div>
+                    <div class="control-row"><label>East</label><div class="btn-group"><button onclick="adjustSideOffset('E',-5)">-</button><span class="size-value" id="side_off_E">0</span><button onclick="adjustSideOffset('E',5)">+</button></div></div>
+                    <div class="control-row"><label>West</label><div class="btn-group"><button onclick="adjustSideOffset('W',-5)">-</button><span class="size-value" id="side_off_W">0</span><button onclick="adjustSideOffset('W',5)">+</button></div></div>
+
+                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;">Compass Position</label>
+                    <div class="control-row">
+                        <label>Vertical</label>
+                        <div class="btn-group">
+                            <button onclick="adjustCompass('y', -10)">&#x25B2;</button>
+                            <span class="size-value" id="compass_y_val">0</span>
+                            <button onclick="adjustCompass('y', 10)">&#x25BC;</button>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <label>Horizontal</label>
+                        <div class="btn-group">
+                            <button onclick="adjustCompass('x', -10)">&#x25C0;</button>
+                            <span class="size-value" id="compass_x_val">0</span>
+                            <button onclick="adjustCompass('x', 10)">&#x25B6;</button>
                         </div>
                     </div>
                 </div>
@@ -1266,10 +1384,15 @@ function saveFormData() {
         w_in: document.getElementById('w_in').value,
         road_direction: document.getElementById('road_direction').value,
         road_text: document.getElementById('road_text').value,
+        road_width: document.getElementById('road_width').value,
+        road_number: document.getElementById('road_number').value,
         title: document.getElementById('title').value,
         vendor: document.getElementById('vendor').value,
-        rep_by: document.getElementById('rep_by').value,
         vendees: document.getElementById('vendees').value,
+        vendor_label: document.getElementById('vendor_label').value,
+        vendee_label: document.getElementById('vendee_label').value,
+        sig_label_1: document.getElementById('sig_label_1').value,
+        sig_label_2: document.getElementById('sig_label_2').value,
         north_txt: document.getElementById('north_txt').value,
         south_txt: document.getElementById('south_txt').value,
         east_txt: document.getElementById('east_txt').value,
@@ -1280,8 +1403,24 @@ function saveFormData() {
         plinth: document.getElementById('plinth').value,
         wit1: document.getElementById('wit1').value,
         wit2: document.getElementById('wit2').value,
-        showInterior: (document.getElementById('showInterior').checked || document.getElementById('showInterior').value === 'true'),
+        showInterior: document.getElementById('showInterior').value === 'true',
+        dims_outside: document.getElementById('dims_outside').checked,
+        trap_align: document.getElementById('trap_align').value,
+        trap_valign: document.getElementById('trap_valign').value,
+        trap_offset_h: document.getElementById('trap_offset_h').value,
+        trap_offset_v: document.getElementById('trap_offset_v').value,
+        show_room: document.getElementById('show_room').checked,
+        room_label: document.getElementById('room_label').value,
+        room_w_ft: document.getElementById('room_w_ft').value,
+        room_w_in: document.getElementById('room_w_in').value,
+        room_h_ft: document.getElementById('room_h_ft').value,
+        room_h_in: document.getElementById('room_h_in').value,
+        show_area_in_plot: document.getElementById('show_area_in_plot').checked,
         textSizes: textSizes,
+        compassOffset: { x: compassOffset.x, y: compassOffset.y },
+        sideOffsets: { N: sideOffsets.N, S: sideOffsets.S, E: sideOffsets.E, W: sideOffsets.W },
+        plotPosOffset: { x: plotPosOffset.x, y: plotPosOffset.y },
+        plotScaleAdj: plotScaleAdj,
         zoom: currentZoom
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1304,15 +1443,64 @@ function loadFormData() {
             if (data[id] !== undefined) document.getElementById(id).value = data[id];
         });
 
-        var textFields = ['road_direction','road_text','title','vendor','rep_by','vendees',
+        var textFields = ['road_direction','road_text','road_width','road_number',
+            'title','vendor','vendees','vendor_label','vendee_label','sig_label_1','sig_label_2',
             'north_txt','south_txt','east_txt','west_txt',
-            'plot_center_txt','open_area_txt','building_type','plinth','wit1','wit2'];
+            'plot_center_txt','open_area_txt','building_type','plinth','wit1','wit2',
+            'room_label','room_w_ft','room_w_in','room_h_ft','room_h_in'];
         textFields.forEach(function(id) {
             if (data[id] !== undefined) document.getElementById(id).value = data[id];
         });
 
         if (data.showInterior !== undefined) {
-            (document.getElementById('showInterior').checked || document.getElementById('showInterior').value === 'true') = data.showInterior;
+            document.getElementById('showInterior').value = data.showInterior ? 'true' : 'false';
+        }
+
+        // Checkbox fields
+        if (data.compassOffset) {
+            compassOffset.x = data.compassOffset.x || 0;
+            compassOffset.y = data.compassOffset.y || 0;
+            document.getElementById('compass_x_val').textContent = compassOffset.x;
+            document.getElementById('compass_y_val').textContent = compassOffset.y;
+        }
+        if (data.sideOffsets) {
+            sideOffsets.N = data.sideOffsets.N || 0;
+            sideOffsets.S = data.sideOffsets.S || 0;
+            sideOffsets.E = data.sideOffsets.E || 0;
+            sideOffsets.W = data.sideOffsets.W || 0;
+            ['N','S','E','W'].forEach(function(s) { document.getElementById('side_off_' + s).textContent = sideOffsets[s]; });
+        }
+        if (data.plotPosOffset) {
+            plotPosOffset.x = data.plotPosOffset.x || 0;
+            plotPosOffset.y = data.plotPosOffset.y || 0;
+            document.getElementById('plot_pos_x').textContent = plotPosOffset.x;
+            document.getElementById('plot_pos_y').textContent = plotPosOffset.y;
+        }
+        if (data.plotScaleAdj !== undefined) {
+            plotScaleAdj = data.plotScaleAdj || 0;
+            document.getElementById('plot_scale_val').textContent = plotScaleAdj;
+        }
+        if (data.dims_outside !== undefined) {
+            document.getElementById('dims_outside').checked = data.dims_outside;
+        }
+        if (data.trap_align) {
+            document.getElementById('trap_align').value = data.trap_align;
+        }
+        if (data.trap_valign) {
+            document.getElementById('trap_valign').value = data.trap_valign;
+        }
+        if (data.trap_offset_h) {
+            document.getElementById('trap_offset_h').value = data.trap_offset_h;
+        }
+        if (data.trap_offset_v) {
+            document.getElementById('trap_offset_v').value = data.trap_offset_v;
+        }
+        if (data.show_room !== undefined) {
+            document.getElementById('show_room').checked = data.show_room;
+            document.getElementById('room_fields').style.display = data.show_room ? 'block' : 'none';
+        }
+        if (data.show_area_in_plot !== undefined) {
+            document.getElementById('show_area_in_plot').checked = data.show_area_in_plot;
         }
 
         if (data.textSizes) {
@@ -1519,6 +1707,40 @@ function adjustBodySize(delta) {
     scheduleDraw();
 }
 
+// ==================== COMPASS POSITION ====================
+var compassOffset = { x: 0, y: 0 };
+var plotPosOffset = { x: 0, y: 0 };
+var plotScaleAdj = 0;
+
+function adjustPlotPos(axis, delta) {
+    plotPosOffset[axis] += delta;
+    document.getElementById('plot_pos_' + axis).textContent = plotPosOffset[axis];
+    scheduleSave();
+    scheduleDraw();
+}
+
+function adjustPlotScale(delta) {
+    plotScaleAdj += delta;
+    document.getElementById('plot_scale_val').textContent = plotScaleAdj;
+    scheduleSave();
+    scheduleDraw();
+}
+var sideOffsets = { N: 0, S: 0, E: 0, W: 0 };
+
+function adjustSideOffset(side, delta) {
+    sideOffsets[side] += delta;
+    document.getElementById('side_off_' + side).textContent = sideOffsets[side];
+    scheduleSave();
+    scheduleDraw();
+}
+
+function adjustCompass(axis, delta) {
+    compassOffset[axis] += delta;
+    document.getElementById('compass_' + axis + '_val').textContent = compassOffset[axis];
+    scheduleSave();
+    scheduleDraw();
+}
+
 function initBodySizeDisplay() {
     var el = document.getElementById('body_size');
     if (el) el.textContent = textSizes.vendor + 'px';
@@ -1551,16 +1773,41 @@ function updateModeUI() {
         southRow.classList.add('synced');
         westRow.classList.add('synced');
         syncHint.classList.add('visible');
+        document.getElementById('trapAlignHRow').style.display = 'none';
+        document.getElementById('trapAlignVRow').style.display = 'none';
+        document.getElementById('trapHelpNote').style.display = 'none';
         syncRectangleFields();
     } else {
         southRow.classList.remove('synced');
         westRow.classList.remove('synced');
         syncHint.classList.remove('visible');
+        document.getElementById('trapHelpNote').style.display = 'flex';
+        updateTrapAlignVisibility();
     }
+}
+
+function updateTrapAlignVisibility() {
+    if (getMode() === 'rectangle') return;
+    var N = toFeet(document.getElementById('n_ft').value, document.getElementById('n_in').value);
+    var S = toFeet(document.getElementById('s_ft').value, document.getElementById('s_in').value);
+    var E = toFeet(document.getElementById('e_ft').value, document.getElementById('e_in').value);
+    var W = toFeet(document.getElementById('w_ft').value, document.getElementById('w_in').value);
+    document.getElementById('trapAlignHRow').style.display = (N !== S) ? 'block' : 'none';
+    document.getElementById('trapAlignVRow').style.display = (E !== W) ? 'block' : 'none';
 }
 
 document.getElementById('modeRect').addEventListener('change', updateModeUI);
 document.getElementById('modeTrap').addEventListener('change', updateModeUI);
+['n_ft','n_in','s_ft','s_in','e_ft','e_in','w_ft','w_in'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', function() {
+        updateTrapAlignVisibility();
+    });
+});
+
+// Room toggle visibility
+document.getElementById('show_room').addEventListener('change', function() {
+    document.getElementById('room_fields').style.display = this.checked ? 'block' : 'none';
+});
 
 ['n_ft', 'n_in'].forEach(function(id) {
     document.getElementById(id).addEventListener('input', function() {
@@ -1602,7 +1849,13 @@ function svgWrapText(layer, text, x, y, maxWidth, lineHeight, fontSize, opts) {
     var cls = opts.className || '';
     var field = opts.dataField || '';
 
-    var words = text.split(' ');
+    // Preserve leading spaces by converting to non-breaking spaces
+    var leadingSpaces = text.match(/^(\s*)/)[0];
+    var nbsp = '\u00A0';
+    var preservedPrefix = leadingSpaces.replace(/ /g, nbsp);
+    var trimmedText = text.substring(leadingSpaces.length);
+
+    var words = trimmedText.split(' ');
     var lines = [];
     var line = '';
     for (var i = 0; i < words.length; i++) {
@@ -1615,6 +1868,8 @@ function svgWrapText(layer, text, x, y, maxWidth, lineHeight, fontSize, opts) {
         }
     }
     if (line) lines.push(line);
+    // Add preserved leading spaces to first line
+    if (lines.length > 0) lines[0] = preservedPrefix + lines[0];
 
     var textEl = svgElem('text', {
         x: x, y: y,
@@ -1695,19 +1950,62 @@ function calculateArea(topWidth, bottomWidth, height, isRect) {
 
 // ==================== COMPASS ROSE (SVG) ====================
 function drawCompass(layer, cx, cy, size) {
-    // Circle
-    svgElem('circle', { cx: cx, cy: cy, r: size, fill: 'none', stroke: '#000', 'stroke-width': 1 }, layer);
-    // Cross lines
-    svgElem('line', { x1: cx, y1: cy - size + 2, x2: cx, y2: cy + size - 2, stroke: '#000', 'stroke-width': 1 }, layer);
-    svgElem('line', { x1: cx - size + 2, y1: cy, x2: cx + size - 2, y2: cy, stroke: '#000', 'stroke-width': 1 }, layer);
-    // North arrow (filled triangle)
-    var pts = (cx) + ',' + (cy - size + 1) + ' ' + (cx - 3) + ',' + (cy - size + 9) + ' ' + (cx + 3) + ',' + (cy - size + 9);
-    svgElem('polygon', { points: pts, fill: '#000' }, layer);
-    // Labels
-    svgText(layer, 'N', cx, cy - size - 3, 6, { fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'auto' });
-    svgText(layer, 'S', cx, cy + size + 7, 6, { fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'auto' });
-    svgText(layer, 'E', cx + size + 5, cy + 2, 6, { fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'auto' });
-    svgText(layer, 'W', cx - size - 5, cy + 2, 6, { fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'auto' });
+    var r = size;
+    var inner = r * 0.3; // inner diamond radius
+    var lbl = r + 8; // label distance from center
+
+    // Outer circle
+    svgElem('circle', { cx: cx, cy: cy, r: r, fill: 'none', stroke: '#000', 'stroke-width': 1.2 }, layer);
+
+    // 4-pointed star: each cardinal direction has two triangles (filled + unfilled)
+    // North pointer (filled black - left half, white - right half)
+    svgElem('polygon', {
+        points: cx + ',' + (cy - r) + ' ' + (cx - inner) + ',' + cy + ' ' + cx + ',' + (cy - inner * 0.5),
+        fill: '#000', stroke: '#000', 'stroke-width': 0.5
+    }, layer);
+    svgElem('polygon', {
+        points: cx + ',' + (cy - r) + ' ' + (cx + inner) + ',' + cy + ' ' + cx + ',' + (cy - inner * 0.5),
+        fill: '#fff', stroke: '#000', 'stroke-width': 0.5
+    }, layer);
+
+    // South pointer
+    svgElem('polygon', {
+        points: cx + ',' + (cy + r) + ' ' + (cx - inner) + ',' + cy + ' ' + cx + ',' + (cy + inner * 0.5),
+        fill: '#000', stroke: '#000', 'stroke-width': 0.5
+    }, layer);
+    svgElem('polygon', {
+        points: cx + ',' + (cy + r) + ' ' + (cx + inner) + ',' + cy + ' ' + cx + ',' + (cy + inner * 0.5),
+        fill: '#fff', stroke: '#000', 'stroke-width': 0.5
+    }, layer);
+
+    // East pointer
+    svgElem('polygon', {
+        points: (cx + r) + ',' + cy + ' ' + cx + ',' + (cy - inner) + ' ' + (cx + inner * 0.5) + ',' + cy,
+        fill: '#000', stroke: '#000', 'stroke-width': 0.5
+    }, layer);
+    svgElem('polygon', {
+        points: (cx + r) + ',' + cy + ' ' + cx + ',' + (cy + inner) + ' ' + (cx + inner * 0.5) + ',' + cy,
+        fill: '#fff', stroke: '#000', 'stroke-width': 0.5
+    }, layer);
+
+    // West pointer
+    svgElem('polygon', {
+        points: (cx - r) + ',' + cy + ' ' + cx + ',' + (cy - inner) + ' ' + (cx - inner * 0.5) + ',' + cy,
+        fill: '#000', stroke: '#000', 'stroke-width': 0.5
+    }, layer);
+    svgElem('polygon', {
+        points: (cx - r) + ',' + cy + ' ' + cx + ',' + (cy + inner) + ' ' + (cx - inner * 0.5) + ',' + cy,
+        fill: '#fff', stroke: '#000', 'stroke-width': 0.5
+    }, layer);
+
+    // Center dot
+    svgElem('circle', { cx: cx, cy: cy, r: 1.5, fill: '#000' }, layer);
+
+    // Labels outside circle
+    svgText(layer, 'N', cx, cy - lbl, 8, { fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'auto' });
+    svgText(layer, 'S', cx, cy + lbl + 4, 8, { fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'auto' });
+    svgText(layer, 'E', cx + lbl + 1, cy + 3, 8, { fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'auto' });
+    svgText(layer, 'W', cx - lbl - 1, cy + 3, 8, { fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'auto' });
 }
 
 // ==================== DIMENSION ENGINE (SVG) ====================
@@ -1715,48 +2013,49 @@ function drawDimensionLine(p1, p2, offset, normalDir, label) {
     var dimFontSize = textSizes.dimensions;
     var layer = layerDimensions;
 
-    // Extension line endpoints
+    // Extension line endpoints (dotted lines from corners outward)
     var extLen = offset + 10;
-    var e1s = { x: p1.x + normalDir.x * 5, y: p1.y + normalDir.y * 5 };
+    var e1s = { x: p1.x, y: p1.y };
     var e1e = { x: p1.x + normalDir.x * extLen, y: p1.y + normalDir.y * extLen };
-    var e2s = { x: p2.x + normalDir.x * 5, y: p2.y + normalDir.y * 5 };
+    var e2s = { x: p2.x, y: p2.y };
     var e2e = { x: p2.x + normalDir.x * extLen, y: p2.y + normalDir.y * extLen };
 
-    // Extension lines
-    svgElem('line', { x1: e1s.x, y1: e1s.y, x2: e1e.x, y2: e1e.y, stroke: '#000', 'stroke-width': 0.6 }, layer);
-    svgElem('line', { x1: e2s.x, y1: e2s.y, x2: e2e.x, y2: e2e.y, stroke: '#000', 'stroke-width': 0.6 }, layer);
+    // Extension lines (dotted)
+    svgElem('line', { x1: e1s.x, y1: e1s.y, x2: e1e.x, y2: e1e.y, stroke: '#000', 'stroke-width': 0.5, 'stroke-dasharray': '2,2' }, layer);
+    svgElem('line', { x1: e2s.x, y1: e2s.y, x2: e2e.x, y2: e2e.y, stroke: '#000', 'stroke-width': 0.5, 'stroke-dasharray': '2,2' }, layer);
 
-    // Dimension line
+    // Dimension line (between arrows)
     var d1 = { x: p1.x + normalDir.x * offset, y: p1.y + normalDir.y * offset };
     var d2 = { x: p2.x + normalDir.x * offset, y: p2.y + normalDir.y * offset };
-    svgElem('line', { x1: d1.x, y1: d1.y, x2: d2.x, y2: d2.y, stroke: '#000', 'stroke-width': 0.6 }, layer);
 
-    // Arrow heads
-    var arrowLen = 4;
     var dx = d2.x - d1.x;
     var dy = d2.y - d1.y;
     var len = Math.sqrt(dx * dx + dy * dy);
     if (len === 0) return;
     var ux = dx / len, uy = dy / len;
-    var px = -uy, py = ux;
 
-    // Arrow at d1
-    var a1 = (d1.x) + ',' + (d1.y) + ' ' +
-        (d1.x + ux * arrowLen + px * 1.5) + ',' + (d1.y + uy * arrowLen + py * 1.5) + ' ' +
-        (d1.x + ux * arrowLen - px * 1.5) + ',' + (d1.y + uy * arrowLen - py * 1.5);
-    svgElem('polygon', { points: a1, fill: '#000' }, layer);
+    // Arrow heads (tick marks - small perpendicular lines)
+    var tickLen = 4;
+    // Tick at d1
+    svgElem('line', {
+        x1: d1.x - ux * tickLen + (-uy) * tickLen, y1: d1.y - uy * tickLen + ux * tickLen,
+        x2: d1.x + ux * tickLen + (-uy) * (-tickLen), y2: d1.y + uy * tickLen + ux * (-tickLen),
+        stroke: '#000', 'stroke-width': 0.8
+    }, layer);
+    // Tick at d2
+    svgElem('line', {
+        x1: d2.x - ux * tickLen + (-uy) * tickLen, y1: d2.y - uy * tickLen + ux * tickLen,
+        x2: d2.x + ux * tickLen + (-uy) * (-tickLen), y2: d2.y + uy * tickLen + ux * (-tickLen),
+        stroke: '#000', 'stroke-width': 0.8
+    }, layer);
 
-    // Arrow at d2
-    var a2 = (d2.x) + ',' + (d2.y) + ' ' +
-        (d2.x - ux * arrowLen + px * 1.5) + ',' + (d2.y - uy * arrowLen + py * 1.5) + ' ' +
-        (d2.x - ux * arrowLen - px * 1.5) + ',' + (d2.y - uy * arrowLen - py * 1.5);
-    svgElem('polygon', { points: a2, fill: '#000' }, layer);
+    // Dimension line from tick to tick
+    svgElem('line', { x1: d1.x, y1: d1.y, x2: d2.x, y2: d2.y, stroke: '#000', 'stroke-width': 0.5 }, layer);
 
     // Dimension text centered on line
     var midX = (d1.x + d2.x) / 2;
     var midY = (d1.y + d2.y) / 2;
     var angle = Math.atan2(dy, dx) * 180 / Math.PI;
-    // Ensure readable (not upside down)
     if (angle > 90 || angle < -90) angle += 180;
 
     svgText(layer, label, 0, -4, dimFontSize, {
@@ -1768,6 +2067,39 @@ function drawDimensionLine(p1, p2, offset, normalDir, label) {
 }
 
 // ==================== DRAW SIDE TEXT (SVG) ====================
+function drawBorderText(layer, text, cx, cy, fontSize, angle, maxWidth, dataField) {
+    if (!text) return;
+    var words = text.split(' ');
+    var lines = [];
+    var line = '';
+    for (var i = 0; i < words.length; i++) {
+        var test = line + (line ? ' ' : '') + words[i];
+        if (svgMeasureText(test, fontSize) > maxWidth && line) {
+            lines.push(line);
+            line = words[i];
+        } else {
+            line = test;
+        }
+    }
+    if (line) lines.push(line);
+
+    var lineH = fontSize + 2;
+    var startY = -(lines.length - 1) * lineH / 2;
+
+    var g = svgElem('g', {
+        transform: 'translate(' + cx + ',' + cy + ') rotate(' + angle + ')'
+    }, layer);
+
+    for (var j = 0; j < lines.length; j++) {
+        var opts = { textAnchor: 'middle', dominantBaseline: 'middle' };
+        if (dataField) {
+            opts.className = 'editable';
+            opts.dataField = dataField;
+        }
+        svgText(g, lines[j], 0, startY + j * lineH, fontSize, opts);
+    }
+}
+
 function drawSideText(p1, p2, offset, normalDir, text, fontSize, dataField) {
     if (!text) return 1;
     var layer = layerText;
@@ -1798,7 +2130,8 @@ function drawSideText(p1, p2, offset, normalDir, text, fontSize, dataField) {
     if (line) lines.push(line);
 
     var lineH = fontSize + 2;
-    var startY = -(lines.length - 1) * lineH / 2;
+    // First line at offset, extra lines grow inward (toward plot)
+    var startY = -((lines.length - 1) * lineH);
 
     var g = svgElem('g', {
         transform: 'translate(' + midX + ',' + midY + ') rotate(' + angle + ')'
@@ -1840,53 +2173,86 @@ function countSideTextLines(p1, p2, text, fontSize) {
 }
 
 // ==================== ROAD INDICATOR (SVG) ====================
-function drawRoadIndicator(p1, p2, roadText, side, roadOffset) {
+function drawRoadIndicator(p1, p2, roadText, side, sideTextGap, roadWidthFt, scale) {
     var layer = layerText;
     var fs = textSizes.sidetext;
-    var midX = (p1.x + p2.x) / 2;
-    var midY = (p1.y + p2.y) / 2;
+
+    // Road width in SVG units (scaled)
+    var roadW = Math.min(roadWidthFt * scale * 0.4, 40); // cap for visual sanity
+
+    // Compute outward normal for the road side
+    var edgeDx = p2.x - p1.x;
+    var edgeDy = p2.y - p1.y;
+    var edgeLen = Math.sqrt(edgeDx * edgeDx + edgeDy * edgeDy);
+    if (edgeLen === 0) return;
+
+    var outNorm;
+    if (side === 'bottom') outNorm = { x: 0, y: 1 };
+    else if (side === 'top') outNorm = { x: 0, y: -1 };
+    else if (side === 'left') outNorm = { x: -1, y: 0 };
+    else outNorm = { x: 1, y: 0 };
+
+    // Road starts just outside the plot edge
+    var roadStart = sideTextGap + 5;
+
+    // Two corners of road near side (offset from plot edge)
+    var r1s = { x: p1.x + outNorm.x * roadStart, y: p1.y + outNorm.y * roadStart };
+    var r2s = { x: p2.x + outNorm.x * roadStart, y: p2.y + outNorm.y * roadStart };
+    // Two corners of road far side
+    var r1e = { x: p1.x + outNorm.x * (roadStart + roadW), y: p1.y + outNorm.y * (roadStart + roadW) };
+    var r2e = { x: p2.x + outNorm.x * (roadStart + roadW), y: p2.y + outNorm.y * (roadStart + roadW) };
+
+    // Perpendicular tick marks at corners of plot edge (extending into road)
+    var tickLen = roadStart + roadW + 8;
+    svgElem('line', {
+        x1: p1.x, y1: p1.y,
+        x2: p1.x + outNorm.x * tickLen, y2: p1.y + outNorm.y * tickLen,
+        stroke: '#000', 'stroke-width': 0.6
+    }, layer);
+    svgElem('line', {
+        x1: p2.x, y1: p2.y,
+        x2: p2.x + outNorm.x * tickLen, y2: p2.y + outNorm.y * tickLen,
+        stroke: '#000', 'stroke-width': 0.6
+    }, layer);
+
+    // Far-side road line (dashed)
+    svgElem('line', {
+        x1: r1e.x, y1: r1e.y, x2: r2e.x, y2: r2e.y,
+        stroke: '#000', 'stroke-width': 0.6
+    }, layer);
+
+    // Road directional arrows at ends
+    var arrowExt = 12;
+    var eux = edgeDx / edgeLen, euy = edgeDy / edgeLen;
+    var roadMidOffset = roadStart + roadW / 2;
+    // Midline of road
+    var rm1 = { x: p1.x + outNorm.x * roadMidOffset - eux * arrowExt, y: p1.y + outNorm.y * roadMidOffset - euy * arrowExt };
+    var rm2 = { x: p2.x + outNorm.x * roadMidOffset + eux * arrowExt, y: p2.y + outNorm.y * roadMidOffset + euy * arrowExt };
+
+    // Arrow at rm1 (pointing outward from edge)
+    var aSize = 4;
+    svgElem('line', { x1: rm1.x, y1: rm1.y, x2: rm1.x + eux * aSize + outNorm.x * aSize * 0.5, y2: rm1.y + euy * aSize + outNorm.y * aSize * 0.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
+    svgElem('line', { x1: rm1.x, y1: rm1.y, x2: rm1.x + eux * aSize - outNorm.x * aSize * 0.5, y2: rm1.y + euy * aSize - outNorm.y * aSize * 0.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
+    // Arrow at rm2
+    svgElem('line', { x1: rm2.x, y1: rm2.y, x2: rm2.x - eux * aSize + outNorm.x * aSize * 0.5, y2: rm2.y - euy * aSize + outNorm.y * aSize * 0.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
+    svgElem('line', { x1: rm2.x, y1: rm2.y, x2: rm2.x - eux * aSize - outNorm.x * aSize * 0.5, y2: rm2.y - euy * aSize - outNorm.y * aSize * 0.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
+
+    // Road text (centered on road)
+    var roadCenterX = (p1.x + p2.x) / 2 + outNorm.x * roadMidOffset;
+    var roadCenterY = (p1.y + p2.y) / 2 + outNorm.y * roadMidOffset;
 
     if (side === 'bottom' || side === 'top') {
-        var roadY = side === 'bottom' ? midY + roadOffset : midY - roadOffset;
-
-        svgText(layer, roadText.toUpperCase(), midX, roadY, fs, {
+        svgText(layer, roadText.toUpperCase(), roadCenterX, roadCenterY + 2, fs, {
             fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle',
             className: 'editable', dataField: 'road_text'
         });
-
-        var lineWidth = Math.min(Math.abs(p2.x - p1.x) * 0.6, 120);
-        var lineY = side === 'bottom' ? roadY + 8 : roadY - 8;
-        var lx1 = midX - lineWidth / 2;
-        var lx2 = midX + lineWidth / 2;
-
-        svgElem('line', { x1: lx1, y1: lineY, x2: lx2, y2: lineY, stroke: '#000', 'stroke-width': 0.8 }, layer);
-        // Left arrow
-        svgElem('line', { x1: lx1, y1: lineY, x2: lx1 + 5, y2: lineY - 2.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
-        svgElem('line', { x1: lx1, y1: lineY, x2: lx1 + 5, y2: lineY + 2.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
-        // Right arrow
-        svgElem('line', { x1: lx2, y1: lineY, x2: lx2 - 5, y2: lineY - 2.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
-        svgElem('line', { x1: lx2, y1: lineY, x2: lx2 - 5, y2: lineY + 2.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
     } else {
-        var roadX = side === 'left' ? midX - roadOffset : midX + roadOffset;
-
-        svgText(layer, roadText.toUpperCase(), 0, 0, fs, {
+        var angle = side === 'left' ? 90 : -90;
+        svgText(layer, roadText.toUpperCase(), 0, 2, fs, {
             fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle',
-            transform: 'translate(' + roadX + ',' + midY + ') rotate(-90)',
+            transform: 'translate(' + roadCenterX + ',' + roadCenterY + ') rotate(' + angle + ')',
             className: 'editable', dataField: 'road_text'
         });
-
-        var lineLen = Math.min(Math.abs(p2.y - p1.y) * 0.6, 120);
-        var lineX = side === 'left' ? roadX - 8 : roadX + 8;
-        var ly1 = midY - lineLen / 2;
-        var ly2 = midY + lineLen / 2;
-
-        svgElem('line', { x1: lineX, y1: ly1, x2: lineX, y2: ly2, stroke: '#000', 'stroke-width': 0.8 }, layer);
-        // Top arrow
-        svgElem('line', { x1: lineX, y1: ly1, x2: lineX - 2.5, y2: ly1 + 5, stroke: '#000', 'stroke-width': 0.8 }, layer);
-        svgElem('line', { x1: lineX, y1: ly1, x2: lineX + 2.5, y2: ly1 + 5, stroke: '#000', 'stroke-width': 0.8 }, layer);
-        // Bottom arrow
-        svgElem('line', { x1: lineX, y1: ly2, x2: lineX - 2.5, y2: ly2 - 5, stroke: '#000', 'stroke-width': 0.8 }, layer);
-        svgElem('line', { x1: lineX, y1: ly2, x2: lineX + 2.5, y2: ly2 - 5, stroke: '#000', 'stroke-width': 0.8 }, layer);
     }
 }
 
@@ -1897,6 +2263,7 @@ function drawMap() {
     var MARGIN = 20;
     var PAGE_WIDTH = A4_WIDTH - 2 * MARGIN;
     var PAGE_HEIGHT = A4_HEIGHT - 2 * MARGIN;
+    var PAD = 28; // inner padding from border to content
 
     // ---- Layer: Border (outer rectangle) ----
     svgElem('rect', {
@@ -1944,80 +2311,95 @@ function drawMap() {
     // ============================================================
     // ZONE 1 - HEADER
     // ============================================================
-    var zone1Top = MARGIN + 5;
+    var zone1Top = MARGIN;
 
-    // Title text (leave space for compass on right)
+    // Editable labels
+    var vendorLabel = document.getElementById('vendor_label').value.toUpperCase() || 'VENDOR';
+    var vendeeLabel = document.getElementById('vendee_label').value.toUpperCase() || 'VENDEE';
+    var sigVendorLabel = document.getElementById('sig_label_1').value.toUpperCase() || 'SIGNATURE OF ' + vendorLabel;
+    var sigVendeeLabel = document.getElementById('sig_label_2').value.toUpperCase() || 'SIGNATURE OF ' + vendeeLabel;
+
+    // Title text (full width, no need to reserve compass space)
     var titleText = document.getElementById('title').value.toUpperCase();
-    var titleEndY = svgWrapText(layerText, titleText, MARGIN + 15, zone1Top + 15, PAGE_WIDTH - 100, textSizes.title + 2, textSizes.title, {
+    var titleEndY = svgWrapText(layerText, titleText, MARGIN + PAD, zone1Top + PAD + 15, PAGE_WIDTH - 2 * PAD, textSizes.title + 6, textSizes.title, {
         fontWeight: 'bold', className: 'editable', dataField: 'title'
     });
 
-    // Compass rose (top-right of header)
-    drawCompass(layerText, MARGIN + PAGE_WIDTH - 35, zone1Top + 40, 16);
-
     // Vendor / Vendee
     var vendorY = titleEndY + textSizes.title + 10;
-    var vendorLabelW = svgMeasureText('VENDORS', textSizes.vendor, 'bold');
-    var vendeeLabelW = svgMeasureText('VENDEE', textSizes.vendor, 'bold');
+    var vendorLabelW = svgMeasureText(vendorLabel, textSizes.vendor, 'bold');
+    var vendeeLabelW = svgMeasureText(vendeeLabel, textSizes.vendor, 'bold');
     var labelColW = Math.max(vendorLabelW, vendeeLabelW) + 8;
-    var colonX = MARGIN + 15 + labelColW;
+    var colonX = MARGIN + PAD + labelColW;
 
-    // Vendor label
-    svgText(layerText, 'VENDORS', MARGIN + 15, vendorY, textSizes.vendor, { fontWeight: 'bold', textDecoration: 'underline' });
+    // Vendor label + lines (preserve empty lines and leading spaces)
+    svgText(layerText, vendorLabel, MARGIN + PAD, vendorY, textSizes.vendor, { fontWeight: 'bold', textDecoration: 'underline', className: 'editable', dataField: 'vendor_label' });
     var vendorText = document.getElementById('vendor').value.toUpperCase();
-    var vendorEndY = svgWrapText(layerText, ': ' + vendorText, colonX, vendorY, PAGE_WIDTH - labelColW - 100, textSizes.vendor + 3, textSizes.vendor, {
-        className: 'editable', dataField: 'vendor'
-    });
-
-    // Rep By (optional)
-    var repByText = document.getElementById('rep_by').value.trim().toUpperCase();
-    var lastHeaderY = vendorEndY;
-    if (repByText) {
-        var repByY = vendorEndY + textSizes.vendor + 4;
-        var repLines = repByText.split('\n');
-        for (var ri = 0; ri < repLines.length; ri++) {
-            var repPrefix = ri === 0 ? 'REP.BY' : '';
-            if (repPrefix) {
-                svgText(layerText, repPrefix, MARGIN + 50, repByY + ri * (textSizes.vendor + 3), textSizes.vendor, {});
-            }
-            lastHeaderY = svgWrapText(layerText, repLines[ri], colonX + 20, repByY + ri * (textSizes.vendor + 3), PAGE_WIDTH - labelColW - 100, textSizes.vendor + 3, textSizes.vendor, {});
+    var vendorLines = vendorText.split('\n');
+    var vendorEndY = vendorY;
+    var vendorCurY = vendorY;
+    var lineH = textSizes.vendor + 3;
+    for (var vli = 0; vli < vendorLines.length; vli++) {
+        var vPrefix = vli === 0 ? ': ' : '  ';
+        if (vendorLines[vli].trim() === '') {
+            // Empty line — just advance Y
+            vendorCurY += lineH;
+            vendorEndY = vendorCurY;
+        } else {
+            vendorEndY = svgWrapText(layerText, vPrefix + vendorLines[vli], colonX, vendorCurY, PAGE_WIDTH - labelColW - 100, lineH, textSizes.vendor, {
+                className: 'editable', dataField: 'vendor'
+            });
+            vendorCurY = vendorEndY + lineH;
         }
     }
 
-    // Vendee
-    var vendeeY = lastHeaderY + textSizes.vendor + 6;
-    svgText(layerText, 'VENDEE', MARGIN + 15, vendeeY, textSizes.vendor, { fontWeight: 'bold', textDecoration: 'underline' });
+    // Vendee (preserve empty lines and leading spaces)
+    var vendeeY = vendorEndY + textSizes.vendor + 14;
+    svgText(layerText, vendeeLabel, MARGIN + PAD, vendeeY, textSizes.vendor, { fontWeight: 'bold', textDecoration: 'underline', className: 'editable', dataField: 'vendee_label' });
     var vendeeLines = document.getElementById('vendees').value.toUpperCase().split('\n');
     var lastVendeeY = vendeeY;
+    var vendeeCurY = vendeeY;
     for (var vi = 0; vi < vendeeLines.length; vi++) {
         var prefix = vi === 0 ? ': ' : '  ';
-        lastVendeeY = svgWrapText(layerText, prefix + vendeeLines[vi], colonX, vendeeY + vi * (textSizes.vendor + 4), PAGE_WIDTH - labelColW - 100, textSizes.vendor + 3, textSizes.vendor, {
-            className: 'editable', dataField: 'vendees'
-        });
+        if (vendeeLines[vi].trim() === '') {
+            vendeeCurY += lineH;
+            lastVendeeY = vendeeCurY;
+        } else {
+            lastVendeeY = svgWrapText(layerText, prefix + vendeeLines[vi], colonX, vendeeCurY, PAGE_WIDTH - labelColW - 100, lineH, textSizes.vendor, {
+                className: 'editable', dataField: 'vendees'
+            });
+            vendeeCurY = lastVendeeY + lineH;
+        }
     }
 
+    // Compass rose (right side, aligned with vendor/vendee section)
+    var compassCY = vendorY + (lastVendeeY - vendorY) / 2 + 5;
+    drawCompass(layerText, MARGIN + PAGE_WIDTH - 55 + compassOffset.x, compassCY + compassOffset.y, 22);
+
     // ============================================================
-    // ZONE 2 - DRAWING (left ~60%) + SIDEBAR (right ~40%)
+    // ZONE 2 - DRAWING (left 60%) | SIDEBAR (right 40%)
     // ============================================================
-    var zone2Top = lastVendeeY + textSizes.vendor + 15;
-    var FOOTER_HEIGHT = 90;
+    var zone2Top = lastVendeeY + 2;
+    var FOOTER_HEIGHT = 195;
     var zone3Top = A4_HEIGHT - MARGIN - FOOTER_HEIGHT;
     var zone2Height = zone3Top - zone2Top - 10;
 
-    var SIDEBAR_WIDTH = PAGE_WIDTH * 0.35;
-    var PLOT_ZONE_WIDTH = PAGE_WIDTH - SIDEBAR_WIDTH - 15;
+    var PLOT_ZONE_WIDTH = PAGE_WIDTH * 0.6;
+    var SIDEBAR_WIDTH = PAGE_WIDTH * 0.4;
 
+    var dimsOutside = document.getElementById('dims_outside').checked;
     var DRAW_MARGIN = 60 + textSizes.dimensions + textSizes.sidetext * 2;
+    if (dimsOutside) DRAW_MARGIN += 20; // extra space for extension lines
     var DRAW_WIDTH = Math.min(300, PLOT_ZONE_WIDTH - 2 * DRAW_MARGIN);
     var DRAW_HEIGHT = Math.min(350, zone2Height - 2 * DRAW_MARGIN);
 
-    var drawCenterX = MARGIN + PLOT_ZONE_WIDTH / 2;
-    var drawCenterY = zone2Top + zone2Height / 2;
+    var drawCenterX = MARGIN + PLOT_ZONE_WIDTH / 2 - 20 + plotPosOffset.x;
+    var drawCenterY = zone2Top + DRAW_MARGIN + DRAW_HEIGHT / 2 + plotPosOffset.y;
 
     // ---- COORDINATE SYSTEM (Origin-based, bottom-left = 0,0) ----
     var scaleX = DRAW_WIDTH / Math.max(T, B);
     var scaleY = DRAW_HEIGHT / Math.max(visLeft, visRight);
-    var scale = Math.min(scaleX, scaleY);
+    var scale = Math.min(scaleX, scaleY) * (1 + plotScaleAdj / 100);
 
     var plotPts;
     var leftH = visLeft * scale;
@@ -2033,11 +2415,52 @@ function drawMap() {
             { x: 0, y: leftH }
         ];
     } else {
+        var trapAlign = document.getElementById('trap_align').value;
+        var trapVAlign = document.getElementById('trap_valign').value;
+
+        // Horizontal offset for top edge (when T != B)
+        var topOffsetX = 0;
+        if (trapAlign === 'right') {
+            topOffsetX = bW - tW;
+        } else if (trapAlign === 'center') {
+            topOffsetX = (bW - tW) / 2;
+        } else if (trapAlign === 'custom') {
+            var customH = (parseFloat(document.getElementById('trap_offset_h').value) || 0) * scale;
+            topOffsetX = (tW > bW) ? -customH : customH;
+        }
+
+        // Vertical offset (when leftH != rightH)
+        var maxH = Math.max(leftH, rightH);
+        var leftBottomY = 0, rightBottomY = 0;
+        var leftTopY = leftH, rightTopY = rightH;
+
+        if (trapVAlign === 'top') {
+            leftBottomY = maxH - leftH;
+            rightBottomY = maxH - rightH;
+            leftTopY = maxH;
+            rightTopY = maxH;
+        } else if (trapVAlign === 'center') {
+            leftBottomY = (maxH - leftH) / 2;
+            rightBottomY = (maxH - rightH) / 2;
+            leftTopY = leftBottomY + leftH;
+            rightTopY = rightBottomY + rightH;
+        } else if (trapVAlign === 'custom') {
+            var customV = (parseFloat(document.getElementById('trap_offset_v').value) || 0) * scale;
+            if (leftH < rightH) {
+                leftBottomY = customV;
+                leftTopY = customV + leftH;
+            } else {
+                rightBottomY = customV;
+                rightTopY = customV + rightH;
+            }
+        }
+        // bottom: default — bottom flat, top slopes
+
         plotPts = [
-            { x: 0, y: 0 },
-            { x: bW, y: 0 },
-            { x: tW, y: rightH },
-            { x: 0, y: leftH }
+            { x: 0, y: leftBottomY },
+            { x: bW, y: rightBottomY },
+            { x: topOffsetX + tW, y: rightTopY },
+            { x: topOffsetX, y: leftTopY }
         ];
     }
 
@@ -2069,7 +2492,7 @@ function drawMap() {
     var polyPoints = canvasPts.map(function(p) { return p.x + ',' + p.y; }).join(' ');
     svgElem('polygon', {
         points: polyPoints,
-        fill: 'none', stroke: 'red', 'stroke-width': 1.5
+        fill: 'none', stroke: 'red', 'stroke-width': 2.5
     }, layerPlot);
 
     var plotCenterCanvas = {
@@ -2091,39 +2514,67 @@ function drawMap() {
         stroke: '#000', 'stroke-width': 0.6
     }, layerPlot);
 
-    // ---- DIMENSION TEXT INSIDE THE PLOT ----
-    var DIM_INSET = 15;
+    // ---- Area text inside plot (optional) ----
+    var showAreaInPlot = document.getElementById('show_area_in_plot').checked;
+    if (showAreaInPlot) {
+        svgText(layerPlot, '(Sq.Yds ' + area.sqyd.toFixed(2) + ')', plotCenterCanvas.x, plotCenterCanvas.y + 18, textSizes.plotcenter - 2, {
+            textAnchor: 'middle', dominantBaseline: 'middle'
+        });
+    }
 
-    // Bottom dimension (inside, above bottom edge)
-    var bottomMid = { x: (canvasPts[0].x + canvasPts[1].x) / 2, y: (canvasPts[0].y + canvasPts[1].y) / 2 };
-    svgText(layerDimensions, ftStr(visBottom), bottomMid.x, bottomMid.y - DIM_INSET, textSizes.dimensions, {
-        textAnchor: 'middle', dominantBaseline: 'middle'
-    });
+    // ---- Room inside plot (optional) ----
+    var showRoom = document.getElementById('show_room').checked;
+    if (showRoom) {
+        var roomW = toFeet(document.getElementById('room_w_ft').value, document.getElementById('room_w_in').value);
+        var roomH = toFeet(document.getElementById('room_h_ft').value, document.getElementById('room_h_in').value);
+        var roomScaledW = roomW * scale;
+        var roomScaledH = roomH * scale;
+        var roomLabel = document.getElementById('room_label').value || 'ROOM';
 
-    // Top dimension (inside, below top edge)
-    var topMid = { x: (canvasPts[3].x + canvasPts[2].x) / 2, y: (canvasPts[3].y + canvasPts[2].y) / 2 };
-    svgText(layerDimensions, ftStr(visTop), topMid.x, topMid.y + DIM_INSET, textSizes.dimensions, {
-        textAnchor: 'middle', dominantBaseline: 'middle'
-    });
+        // Room at top-left corner with inset padding from edges
+        var roomPad = 15;
+        var roomX = canvasPts[3].x + roomPad;
+        var roomY = canvasPts[3].y + roomPad;
 
-    // Left dimension (inside, rotated along left edge)
+        // Outer rect
+        svgElem('rect', {
+            x: roomX, y: roomY, width: roomScaledW, height: roomScaledH,
+            fill: 'none', stroke: '#000', 'stroke-width': 0.8
+        }, layerPlot);
+        // Inner rect (double line effect)
+        var dbl = 3;
+        svgElem('rect', {
+            x: roomX + dbl, y: roomY + dbl, width: roomScaledW - 2 * dbl, height: roomScaledH - 2 * dbl,
+            fill: 'none', stroke: '#000', 'stroke-width': 0.8
+        }, layerPlot);
+
+        // Room label centered inside
+        svgText(layerPlot, roomLabel.toUpperCase(), roomX + roomScaledW / 2, roomY + roomScaledH / 2, textSizes.plotcenter - 2, {
+            fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle'
+        });
+
+        // Room dimension text
+        svgText(layerDimensions, ftStr(roomW), roomX + roomScaledW / 2, roomY + roomScaledH + 18, textSizes.dimensions - 1, {
+            textAnchor: 'middle'
+        });
+        svgText(layerDimensions, ftStr(roomH), 0, 0, textSizes.dimensions - 1, {
+            textAnchor: 'middle',
+            transform: 'translate(' + (roomX + roomScaledW + 14) + ',' + (roomY + roomScaledH / 2) + ') rotate(-90)'
+        });
+    }
+
+    // ---- Compute edge normals ----
     var leftMid = { x: (canvasPts[0].x + canvasPts[3].x) / 2, y: (canvasPts[0].y + canvasPts[3].y) / 2 };
     var leftDx = canvasPts[3].x - canvasPts[0].x;
     var leftDy = canvasPts[3].y - canvasPts[0].y;
     var leftAngle = Math.atan2(leftDy, leftDx) * 180 / Math.PI;
-    // Compute inward normal (toward center)
     var leftLen = Math.sqrt(leftDx * leftDx + leftDy * leftDy);
     var leftNorm = { x: leftDy / leftLen, y: -leftDx / leftLen };
     var toCenterL = { x: plotCenterCanvas.x - leftMid.x, y: plotCenterCanvas.y - leftMid.y };
     if (leftNorm.x * toCenterL.x + leftNorm.y * toCenterL.y < 0) {
         leftNorm.x = -leftNorm.x; leftNorm.y = -leftNorm.y;
     }
-    svgText(layerDimensions, ftStr(visLeft), 0, 0, textSizes.dimensions, {
-        textAnchor: 'middle', dominantBaseline: 'middle',
-        transform: 'translate(' + (leftMid.x + leftNorm.x * DIM_INSET) + ',' + (leftMid.y + leftNorm.y * DIM_INSET) + ') rotate(' + leftAngle + ')'
-    });
 
-    // Right dimension (inside, rotated along right edge)
     var rightMid = { x: (canvasPts[1].x + canvasPts[2].x) / 2, y: (canvasPts[1].y + canvasPts[2].y) / 2 };
     var rightDx = canvasPts[2].x - canvasPts[1].x;
     var rightDy = canvasPts[2].y - canvasPts[1].y;
@@ -2134,58 +2585,101 @@ function drawMap() {
     if (rightNorm.x * toCenterR.x + rightNorm.y * toCenterR.y < 0) {
         rightNorm.x = -rightNorm.x; rightNorm.y = -rightNorm.y;
     }
-    svgText(layerDimensions, ftStr(visRight), 0, 0, textSizes.dimensions, {
-        textAnchor: 'middle', dominantBaseline: 'middle',
-        transform: 'translate(' + (rightMid.x + rightNorm.x * DIM_INSET) + ',' + (rightMid.y + rightNorm.y * DIM_INSET) + ') rotate(' + rightAngle + ')'
-    });
 
-    // ---- SIDE TEXTS (Layer: Text) ----
-    var SIDE_TEXT_GAP = 20;
+    // Outward normals
+    var leftOutNorm = { x: -leftNorm.x, y: -leftNorm.y };
+    var rightOutNorm = { x: -rightNorm.x, y: -rightNorm.y };
 
-    drawSideText(canvasPts[3], canvasPts[2], SIDE_TEXT_GAP, { x: 0, y: -1 }, textTop, textSizes.sidetext, 'north_txt');
-    drawSideText(canvasPts[0], canvasPts[3], SIDE_TEXT_GAP, leftNorm, textLeft, textSizes.sidetext, 'west_txt');
-    drawSideText(canvasPts[1], canvasPts[2], SIDE_TEXT_GAP, rightNorm, textRight, textSizes.sidetext, 'east_txt');
+    // ---- DIMENSIONS (Inside or Outside) ----
+    if (dimsOutside) {
+        // Outside dimensions with extension lines + tick marks
+        var DIM_OFFSET = 25;
+        // Bottom
+        drawDimensionLine(canvasPts[0], canvasPts[1], DIM_OFFSET, { x: 0, y: 1 }, ftStr(visBottom));
+        // Top
+        drawDimensionLine(canvasPts[3], canvasPts[2], DIM_OFFSET, { x: 0, y: -1 }, ftStr(visTop));
+        // Left
+        drawDimensionLine(canvasPts[0], canvasPts[3], DIM_OFFSET, leftOutNorm, ftStr(visLeft));
+        // Right
+        drawDimensionLine(canvasPts[1], canvasPts[2], DIM_OFFSET, rightOutNorm, ftStr(visRight));
+    } else {
+        // Inside dimensions (text placed inside the plot)
+        var DIM_INSET = 15;
+
+        // Bottom
+        var bottomMid = { x: (canvasPts[0].x + canvasPts[1].x) / 2, y: (canvasPts[0].y + canvasPts[1].y) / 2 };
+        svgText(layerDimensions, ftStr(visBottom), bottomMid.x, bottomMid.y - DIM_INSET, textSizes.dimensions, {
+            textAnchor: 'middle', dominantBaseline: 'middle'
+        });
+
+        // Top
+        var topMid = { x: (canvasPts[3].x + canvasPts[2].x) / 2, y: (canvasPts[3].y + canvasPts[2].y) / 2 };
+        svgText(layerDimensions, ftStr(visTop), topMid.x, topMid.y + DIM_INSET, textSizes.dimensions, {
+            textAnchor: 'middle', dominantBaseline: 'middle'
+        });
+
+        // Left
+        svgText(layerDimensions, ftStr(visLeft), 0, 0, textSizes.dimensions, {
+            textAnchor: 'middle', dominantBaseline: 'middle',
+            transform: 'translate(' + (leftMid.x + leftNorm.x * DIM_INSET) + ',' + (leftMid.y + leftNorm.y * DIM_INSET) + ') rotate(' + leftAngle + ')'
+        });
+
+        // Right
+        svgText(layerDimensions, ftStr(visRight), 0, 0, textSizes.dimensions, {
+            textAnchor: 'middle', dominantBaseline: 'middle',
+            transform: 'translate(' + (rightMid.x + rightNorm.x * DIM_INSET) + ',' + (rightMid.y + rightNorm.y * DIM_INSET) + ') rotate(' + rightAngle + ')'
+        });
+    }
+
+    // ---- SIDE TEXTS outside the plot (Layer: Text) ----
+    var SIDE_TEXT_GAP = dimsOutside ? 55 : 30;
+
+    drawSideText(canvasPts[3], canvasPts[2], SIDE_TEXT_GAP + sideOffsets.N, { x: 0, y: -1 }, textTop, textSizes.sidetext, 'north_txt');
+    drawSideText(canvasPts[0], canvasPts[3], SIDE_TEXT_GAP + sideOffsets.W, leftOutNorm, textLeft, textSizes.sidetext, 'west_txt');
+    drawSideText(canvasPts[1], canvasPts[2], SIDE_TEXT_GAP + sideOffsets.E, rightOutNorm, textRight, textSizes.sidetext, 'east_txt');
 
     // Bottom side text
-    var bottomSideTxtY = (canvasPts[0].y + canvasPts[1].y) / 2 + SIDE_TEXT_GAP;
-    svgText(layerText, textBottom, (canvasPts[0].x + canvasPts[1].x) / 2, bottomSideTxtY, textSizes.sidetext, {
-        textAnchor: 'middle', dominantBaseline: 'middle',
-        className: 'editable', dataField: 'south_txt'
-    });
+    drawSideText(canvasPts[0], canvasPts[1], SIDE_TEXT_GAP + sideOffsets.S, { x: 0, y: 1 }, textBottom, textSizes.sidetext, 'south_txt');
 
     // ---- ROAD INDICATOR ----
     var roadSide = getRoadSide(roadDir);
     var roadText = document.getElementById('road_text').value;
+    var roadWidthFt = parseFloat(document.getElementById('road_width').value) || 30;
+    var roadNumber = document.getElementById('road_number').value.trim();
 
-    var roadSideLineCount = 1;
+    // Build road display text: combine road text + width + number
+    var roadDisplayText = roadText;
+    if (roadWidthFt > 0) {
+        var roadWidthStr = roadWidthFt + "'-0\"";
+        // Append road width to text if not already there
+        if (roadDisplayText.indexOf("WIDE") === -1 && roadDisplayText.indexOf("wide") === -1) {
+            roadDisplayText += ' ' + roadWidthStr + ' WIDE ROAD';
+            if (roadNumber) roadDisplayText += ' ' + roadNumber;
+        }
+    }
+
     var roadEdgeP1, roadEdgeP2;
     if (roadSide === 'bottom') {
         roadEdgeP1 = canvasPts[0]; roadEdgeP2 = canvasPts[1];
-        roadSideLineCount = countSideTextLines(canvasPts[0], canvasPts[1], textBottom, textSizes.sidetext);
     } else if (roadSide === 'top') {
         roadEdgeP1 = canvasPts[3]; roadEdgeP2 = canvasPts[2];
-        roadSideLineCount = countSideTextLines(canvasPts[3], canvasPts[2], textTop, textSizes.sidetext);
     } else if (roadSide === 'left') {
         roadEdgeP1 = canvasPts[0]; roadEdgeP2 = canvasPts[3];
-        roadSideLineCount = countSideTextLines(canvasPts[0], canvasPts[3], textLeft, textSizes.sidetext);
     } else {
         roadEdgeP1 = canvasPts[1]; roadEdgeP2 = canvasPts[2];
-        roadSideLineCount = countSideTextLines(canvasPts[1], canvasPts[2], textRight, textSizes.sidetext);
     }
-    var sideTextHeight = roadSideLineCount * (textSizes.sidetext + 2);
-    var roadOffset = SIDE_TEXT_GAP + sideTextHeight + 12;
 
-    drawRoadIndicator(roadEdgeP1, roadEdgeP2, roadText, roadSide, roadOffset);
+    drawRoadIndicator(roadEdgeP1, roadEdgeP2, roadDisplayText, roadSide, SIDE_TEXT_GAP, roadWidthFt, scale);
 
     // ============================================================
-    // RIGHT SIDEBAR - References + Vendor Signature
+    // RIGHT SIDEBAR (40%) - References + Vendor Signature
     // ============================================================
     var fs = textSizes.sidetext;
     var fv = textSizes.vendor;
     var lineGap = fs + 5;
 
-    var sidebarX = MARGIN + PLOT_ZONE_WIDTH + 15;
-    var sidebarY = zone2Top + 5;
+    var sidebarX = MARGIN + PLOT_ZONE_WIDTH + 25;
+    var sidebarY = zone2Top + 60;
     var sidebarW = SIDEBAR_WIDTH - 10;
 
     // REFERENCES heading
@@ -2193,10 +2687,10 @@ function drawMap() {
 
     // Including with red box
     var inclY = sidebarY + fv + 8 + fs;
-    svgText(layerText, 'INCLUDING :', sidebarX, inclY, fs, {});
+    svgText(layerText, 'INCLUDING :', sidebarX, inclY, fs, { fontWeight: 'bold' });
     svgElem('rect', {
-        x: sidebarX + svgMeasureText('INCLUDING : ', fs) + 4, y: inclY - fs + 2, width: 12, height: 8,
-        fill: 'none', stroke: 'red', 'stroke-width': 1.2
+        x: sidebarX + svgMeasureText('INCLUDING : ', fs, 'bold') + 4, y: inclY - fs + 2, width: 16, height: 10,
+        fill: 'none', stroke: 'red', 'stroke-width': 1.5
     }, layerText);
 
     // Area: Sq.Yds and Sq.Mts
@@ -2206,56 +2700,61 @@ function drawMap() {
 
     svgText(layerText, 'TOTAL AREA', sidebarX, areaY, fs, {});
     svgText(layerText, ':', areaColonX, areaY, fs, {});
-    svgText(layerText, area.sqyd.toFixed(2) + ' Sq.Yds.', areaValueX, areaY, fs, {});
+    svgText(layerText, area.sqyd.toFixed(2) + ' Sq.Yards', areaValueX, areaY, fs, {});
 
-    svgText(layerText, '(OR)', sidebarX, areaY + lineGap, fs, {});
+    svgText(layerText, '( OR )', sidebarX + 30, areaY + lineGap, fs, {});
     svgText(layerText, ':', areaColonX, areaY + lineGap, fs, {});
-    svgText(layerText, area.sqm.toFixed(2) + ' Sq.Mts.', areaValueX, areaY + lineGap, fs, {});
+    svgText(layerText, area.sqm.toFixed(2) + ' Sq.Mtrs', areaValueX, areaY + lineGap, fs, {});
 
     // Building type and plinth (if interior shown)
     var sidebarContentY = areaY + lineGap * 2 + 4;
-    if ((document.getElementById('showInterior').checked || document.getElementById('showInterior').value === 'true')) {
+    if (document.getElementById('showInterior').value === 'true') {
         var buildingType = document.getElementById('building_type').value.toUpperCase();
         var plinthArea = parseFloat(document.getElementById('plinth').value) || 0;
-        svgText(layerText, buildingType, sidebarX, sidebarContentY, fs, {
-            className: 'editable', dataField: 'building_type'
-        });
-        sidebarContentY += lineGap;
-        svgText(layerText, 'PLINTH AREA', sidebarX, sidebarContentY, fs, {});
-        svgText(layerText, ':', areaColonX, sidebarContentY, fs, {});
-        svgText(layerText, plinthArea.toFixed(2) + ' Sq.Fts.', areaValueX, sidebarContentY, fs, {
-            className: 'editable', dataField: 'plinth'
-        });
-        sidebarContentY += lineGap + 8;
+        if (buildingType) {
+            svgText(layerText, buildingType, sidebarX, sidebarContentY, fs, {
+                textDecoration: 'underline', className: 'editable', dataField: 'building_type'
+            });
+            sidebarContentY += lineGap;
+        }
+        if (plinthArea > 0) {
+            svgText(layerText, 'PLINTH AREA', sidebarX, sidebarContentY, fs, {});
+            svgText(layerText, ':', areaColonX, sidebarContentY, fs, {});
+            svgText(layerText, plinthArea.toFixed(2) + ' Sq.Fts.', areaValueX, sidebarContentY, fs, {
+                className: 'editable', dataField: 'plinth'
+            });
+            sidebarContentY += lineGap;
+        }
+        sidebarContentY += 8;
     } else {
         sidebarContentY += 8;
     }
 
-    // SIGNATURE OF VENDOR/DEVELOPER/FIRM
-    svgText(layerText, 'SIGNATURE OF', sidebarX, sidebarContentY + fv, fv, { fontWeight: 'bold' });
-    svgText(layerText, 'VENDOR/DEVELOPER/FIRM', sidebarX, sidebarContentY + fv + fv + 4, fv, { fontWeight: 'bold' });
+
+    sidebarContentY += 8;
 
     // ============================================================
-    // ZONE 3 - BOTTOM (Witnesses left, Vendee Signature right)
+    // ZONE 3 - BOTTOM (Witnesses left, Signatures right)
     // ============================================================
     var witY = zone3Top + 5;
 
-    svgText(layerText, 'WITNESSES', MARGIN + 15, witY + fv, fv, { fontWeight: 'bold', textDecoration: 'underline' });
+    svgText(layerText, 'WITNESSES', MARGIN + PAD, witY + fv, fv, { fontWeight: 'bold', textDecoration: 'underline' });
 
     var wit1 = document.getElementById('wit1').value;
     var wit2 = document.getElementById('wit2').value;
-    var witLine1 = witY + fv + 10 + fs;
-    var witLine2 = witLine1 + lineGap + 8;
+    var witLine1 = witY + fv + 22 + fs;
+    var witLine2 = witLine1 + lineGap + 20;
 
-    svgText(layerText, '1. ' + wit1, MARGIN + 15, witLine1, fs, { className: 'editable', dataField: 'wit1' });
-    svgText(layerText, '2. ' + wit2, MARGIN + 15, witLine2, fs, { className: 'editable', dataField: 'wit2' });
+    svgText(layerText, '1.', MARGIN + PAD, witLine1, fs, { fontWeight: 'bold', textDecoration: 'underline' });
+    svgText(layerText, wit1, MARGIN + PAD + 15, witLine1, fs, { className: 'editable', dataField: 'wit1' });
+    svgText(layerText, '2.', MARGIN + PAD, witLine2, fs, { fontWeight: 'bold', textDecoration: 'underline' });
+    svgText(layerText, wit2, MARGIN + PAD + 15, witLine2, fs, { className: 'editable', dataField: 'wit2' });
 
-    svgElem('line', { x1: MARGIN + 28, y1: witLine1 + 4, x2: MARGIN + 220, y2: witLine1 + 4, stroke: '#000', 'stroke-width': 0.5 }, layerText);
-    svgElem('line', { x1: MARGIN + 28, y1: witLine2 + 4, x2: MARGIN + 220, y2: witLine2 + 4, stroke: '#000', 'stroke-width': 0.5 }, layerText);
+    // SIGNATURE OF VENDOR (right side, top)
+    svgText(layerText, sigVendorLabel, sidebarX, witY + fv - 35, fv, { fontWeight: 'bold', textDecoration: 'underline', className: 'editable', dataField: 'sig_label_1' });
 
-    // SIGNATURE OF VENDEE (bottom-right)
-    svgText(layerText, 'SIGNATURE OF VENDEE', sidebarX, witY + fv, fv, { fontWeight: 'bold', textDecoration: 'underline' });
-    svgElem('line', { x1: sidebarX, y1: witLine1 + 4, x2: sidebarX + sidebarW, y2: witLine1 + 4, stroke: '#000', 'stroke-width': 0.5 }, layerText);
+    // SIGNATURE OF VENDEE (right side, below vendor)
+    svgText(layerText, sigVendeeLabel, sidebarX, witY + fv + 65, fv, { fontWeight: 'bold', textDecoration: 'underline', className: 'editable', dataField: 'sig_label_2' });
 }
 
 // ==================== PDF EXPORT (Vector, selectable text) ====================
@@ -2282,17 +2781,23 @@ function downloadPDF() {
 var fieldToSection = {
     title: 'sec-header',
     vendor: 'sec-header',
-    rep_by: 'sec-header',
     vendees: 'sec-header',
+    vendor_label: 'sec-header',
+    vendee_label: 'sec-header',
     north_txt: 'sec-boundaries',
     south_txt: 'sec-boundaries',
     east_txt: 'sec-boundaries',
     west_txt: 'sec-boundaries',
     road_text: 'sec-boundaries',
+    road_width: 'sec-boundaries',
+    road_number: 'sec-boundaries',
     plot_center_txt: 'sec-interior',
     open_area_txt: 'sec-interior',
     building_type: 'sec-interior',
     plinth: 'sec-interior',
+    room_label: 'sec-interior',
+    sig_label_1: 'sec-footer',
+    sig_label_2: 'sec-footer',
     wit1: 'sec-footer',
     wit2: 'sec-footer'
 };
@@ -2403,10 +2908,15 @@ function collectFormData() {
         w_in: document.getElementById('w_in').value,
         road_direction: document.getElementById('road_direction').value,
         road_text: document.getElementById('road_text').value,
+        road_width: document.getElementById('road_width').value,
+        road_number: document.getElementById('road_number').value,
         title: document.getElementById('title').value,
         vendor: document.getElementById('vendor').value,
-        rep_by: document.getElementById('rep_by').value,
         vendees: document.getElementById('vendees').value,
+        vendor_label: document.getElementById('vendor_label').value,
+        vendee_label: document.getElementById('vendee_label').value,
+        sig_label_1: document.getElementById('sig_label_1').value,
+        sig_label_2: document.getElementById('sig_label_2').value,
         north_txt: document.getElementById('north_txt').value,
         south_txt: document.getElementById('south_txt').value,
         east_txt: document.getElementById('east_txt').value,
@@ -2417,8 +2927,24 @@ function collectFormData() {
         plinth: document.getElementById('plinth').value,
         wit1: document.getElementById('wit1').value,
         wit2: document.getElementById('wit2').value,
-        showInterior: (document.getElementById('showInterior').checked || document.getElementById('showInterior').value === 'true'),
+        showInterior: document.getElementById('showInterior').value === 'true',
+        dims_outside: document.getElementById('dims_outside').checked,
+        trap_align: document.getElementById('trap_align').value,
+        trap_valign: document.getElementById('trap_valign').value,
+        trap_offset_h: document.getElementById('trap_offset_h').value,
+        trap_offset_v: document.getElementById('trap_offset_v').value,
+        show_room: document.getElementById('show_room').checked,
+        room_label: document.getElementById('room_label').value,
+        room_w_ft: document.getElementById('room_w_ft').value,
+        room_w_in: document.getElementById('room_w_in').value,
+        room_h_ft: document.getElementById('room_h_ft').value,
+        room_h_in: document.getElementById('room_h_in').value,
+        show_area_in_plot: document.getElementById('show_area_in_plot').checked,
         textSizes: JSON.parse(JSON.stringify(textSizes)),
+        compassOffset: { x: compassOffset.x, y: compassOffset.y },
+        sideOffsets: { N: sideOffsets.N, S: sideOffsets.S, E: sideOffsets.E, W: sideOffsets.W },
+        plotPosOffset: { x: plotPosOffset.x, y: plotPosOffset.y },
+        plotScaleAdj: plotScaleAdj,
         zoom: currentZoom
     };
 }
@@ -2435,15 +2961,48 @@ function applyFormData(data) {
         if (data[id] !== undefined) document.getElementById(id).value = data[id];
     });
 
-    var textFields = ['road_direction','road_text','title','vendor','rep_by','vendees',
+    var textFields = ['road_direction','road_text','road_width','road_number',
+        'title','vendor','vendees','vendor_label','vendee_label','sig_label_1','sig_label_2',
         'north_txt','south_txt','east_txt','west_txt',
-        'plot_center_txt','open_area_txt','building_type','plinth','wit1','wit2'];
+        'plot_center_txt','open_area_txt','building_type','plinth','wit1','wit2',
+        'room_label','room_w_ft','room_w_in','room_h_ft','room_h_in'];
     textFields.forEach(function(id) {
         if (data[id] !== undefined) document.getElementById(id).value = data[id];
     });
 
     if (data.showInterior !== undefined) {
-        (document.getElementById('showInterior').checked || document.getElementById('showInterior').value === 'true') = data.showInterior;
+        document.getElementById('showInterior').value = data.showInterior ? 'true' : 'false';
+    }
+
+    // Checkbox fields
+    if (data.dims_outside !== undefined) {
+        document.getElementById('dims_outside').checked = data.dims_outside;
+    }
+    if (data.trap_align) {
+        document.getElementById('trap_align').value = data.trap_align;
+    }
+    if (data.trap_valign) {
+        document.getElementById('trap_valign').value = data.trap_valign;
+    }
+    if (data.trap_offset_h) {
+        document.getElementById('trap_offset_h').value = data.trap_offset_h;
+    }
+    if (data.trap_offset_v) {
+        document.getElementById('trap_offset_v').value = data.trap_offset_v;
+    }
+    if (data.show_room !== undefined) {
+        document.getElementById('show_room').checked = data.show_room;
+        document.getElementById('room_fields').style.display = data.show_room ? 'block' : 'none';
+    }
+    if (data.show_area_in_plot !== undefined) {
+        document.getElementById('show_area_in_plot').checked = data.show_area_in_plot;
+    }
+    if (data.sideOffsets) {
+        sideOffsets.N = data.sideOffsets.N || 0;
+        sideOffsets.S = data.sideOffsets.S || 0;
+        sideOffsets.E = data.sideOffsets.E || 0;
+        sideOffsets.W = data.sideOffsets.W || 0;
+        ['N','S','E','W'].forEach(function(s) { document.getElementById('side_off_' + s).textContent = sideOffsets[s]; });
     }
 
     if (data.textSizes) {
@@ -2659,22 +3218,55 @@ function newPlot() {
     document.getElementById('w_ft').value = '20';
     document.getElementById('w_in').value = '0';
     document.getElementById('road_direction').value = 'south';
-    document.getElementById('road_text').value = '( SOUTH ) ROAD';
+    document.getElementById('road_text').value = '( SOUTH )';
+    document.getElementById('road_width').value = '30';
+    document.getElementById('road_number').value = '';
     document.getElementById('title').value = '';
     document.getElementById('vendor').value = '';
-    document.getElementById('rep_by').value = '';
     document.getElementById('vendees').value = '';
+    document.getElementById('vendor_label').value = 'VENDOR';
+    document.getElementById('vendee_label').value = 'VENDEE';
+    document.getElementById('sig_label_1').value = 'SIGNATURE OF VENDOR';
+    document.getElementById('sig_label_2').value = 'SIGNATURE OF VENDEE';
     document.getElementById('north_txt').value = '';
     document.getElementById('south_txt').value = '';
     document.getElementById('east_txt').value = '';
     document.getElementById('west_txt').value = '';
     document.getElementById('plot_center_txt').value = 'PLOT NO.';
     document.getElementById('open_area_txt').value = '';
-    document.getElementById('building_type').value = 'A.C.C ROOF';
+    document.getElementById('building_type').value = '';
     document.getElementById('plinth').value = '0';
     document.getElementById('wit1').value = '';
     document.getElementById('wit2').value = '';
-    (document.getElementById('showInterior').checked || document.getElementById('showInterior').value === 'true') = true;
+    document.getElementById('showInterior').value = 'true';
+    document.getElementById('dims_outside').checked = false;
+    document.getElementById('trap_align').value = 'left';
+    document.getElementById('trap_valign').value = 'bottom';
+    document.getElementById('trap_offset_h').value = '0';
+    document.getElementById('trap_offset_v').value = '0';
+    document.getElementById('trapAlignHRow').style.display = 'none';
+    document.getElementById('trapAlignVRow').style.display = 'none';
+    document.getElementById('trapCustomHRow').style.display = 'none';
+    document.getElementById('trapCustomVRow').style.display = 'none';
+    document.getElementById('trapHelpNote').style.display = 'none';
+    document.getElementById('show_room').checked = false;
+    document.getElementById('room_fields').style.display = 'none';
+    document.getElementById('room_label').value = 'ROOM';
+    document.getElementById('room_w_ft').value = '10';
+    document.getElementById('room_w_in').value = '0';
+    document.getElementById('room_h_ft').value = '10';
+    document.getElementById('room_h_in').value = '0';
+    document.getElementById('show_area_in_plot').checked = false;
+    compassOffset = { x: 0, y: 0 };
+    sideOffsets = { N: 0, S: 0, E: 0, W: 0 };
+    ['N','S','E','W'].forEach(function(s) { document.getElementById('side_off_' + s).textContent = '0'; });
+    plotPosOffset = { x: 0, y: 0 };
+    plotScaleAdj = 0;
+    document.getElementById('plot_pos_x').textContent = '0';
+    document.getElementById('plot_pos_y').textContent = '0';
+    document.getElementById('plot_scale_val').textContent = '0';
+    document.getElementById('compass_x_val').textContent = '0';
+    document.getElementById('compass_y_val').textContent = '0';
 
     setActivePlotId(null);
     updateModeUI();
@@ -2762,7 +3354,141 @@ window.addEventListener('load', function() {
         if (canvas) canvas.classList.add('mobile-hidden');
     }
 });
+// ==================== TRAP ALIGN CUSTOM TOGGLE ====================
+document.getElementById('trap_align').addEventListener('change', function() {
+    document.getElementById('trapCustomHRow').style.display = this.value === 'custom' ? 'block' : 'none';
+});
+document.getElementById('trap_valign').addEventListener('change', function() {
+    document.getElementById('trapCustomVRow').style.display = this.value === 'custom' ? 'block' : 'none';
+});
+
+// ==================== TRAP HELP MODAL ====================
+function showTrapHelp() {
+    document.getElementById('trapHelpModal').style.display = 'flex';
+}
+function closeTrapHelp() {
+    document.getElementById('trapHelpModal').style.display = 'none';
+}
 </script>
+
+<!-- Trapezoid Alignment Help Modal -->
+<div id="trapHelpModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;padding:20px;" onclick="if(event.target===this)closeTrapHelp();">
+    <div style="background:#1a1a2e;border:1px solid #444;border-radius:12px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;color:#eee;font-family:monospace;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h2 style="margin:0;color:#FFD93D;font-size:18px;">Trapezoid Alignment Guide</h2>
+            <button onclick="closeTrapHelp()" style="background:none;border:none;color:#eee;font-size:24px;cursor:pointer;">&times;</button>
+        </div>
+
+        <h3 style="color:#FFD93D;margin:16px 0 8px;font-size:14px;">When N ≠ S (Width differs)</h3>
+        <p style="font-size:12px;color:#aaa;margin-bottom:8px;">Example: S = 40ft (bottom), N = 50ft (top) — top is 10ft wider</p>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+            <div style="flex:1;min-width:180px;background:#111;border:1px solid #333;border-radius:8px;padding:12px;">
+                <div style="color:#4fc3f7;font-weight:bold;font-size:12px;margin-bottom:8px;">LEFT-ALIGNED</div>
+                <svg viewBox="0 0 160 120" style="width:100%;background:#0a0a1a;border-radius:4px;">
+                    <text x="80" y="12" fill="#aaa" font-size="9" text-anchor="middle">50ft</text>
+                    <polygon points="10,20 150,20 130,100 10,100" fill="none" stroke="#4fc3f7" stroke-width="1.5"/>
+                    <line x1="10" y1="20" x2="10" y2="100" stroke="#4fc3f7" stroke-width="2.5"/>
+                    <text x="80" y="112" fill="#aaa" font-size="9" text-anchor="middle">40ft</text>
+                    <text x="80" y="65" fill="#666" font-size="8" text-anchor="middle">Left wall vertical</text>
+                    <text x="80" y="77" fill="#666" font-size="8" text-anchor="middle">Extra → Right</text>
+                </svg>
+            </div>
+            <div style="flex:1;min-width:180px;background:#111;border:1px solid #333;border-radius:8px;padding:12px;">
+                <div style="color:#81c784;font-weight:bold;font-size:12px;margin-bottom:8px;">RIGHT-ALIGNED</div>
+                <svg viewBox="0 0 160 120" style="width:100%;background:#0a0a1a;border-radius:4px;">
+                    <text x="80" y="12" fill="#aaa" font-size="9" text-anchor="middle">50ft</text>
+                    <polygon points="10,20 150,20 150,100 30,100" fill="none" stroke="#81c784" stroke-width="1.5"/>
+                    <line x1="150" y1="20" x2="150" y2="100" stroke="#81c784" stroke-width="2.5"/>
+                    <text x="80" y="112" fill="#aaa" font-size="9" text-anchor="middle">40ft</text>
+                    <text x="80" y="65" fill="#666" font-size="8" text-anchor="middle">Right wall vertical</text>
+                    <text x="80" y="77" fill="#666" font-size="8" text-anchor="middle">Extra → Left</text>
+                </svg>
+            </div>
+            <div style="flex:1;min-width:180px;background:#111;border:1px solid #333;border-radius:8px;padding:12px;">
+                <div style="color:#ffb74d;font-weight:bold;font-size:12px;margin-bottom:8px;">CENTER</div>
+                <svg viewBox="0 0 160 120" style="width:100%;background:#0a0a1a;border-radius:4px;">
+                    <text x="80" y="12" fill="#aaa" font-size="9" text-anchor="middle">50ft</text>
+                    <polygon points="10,20 150,20 140,100 20,100" fill="none" stroke="#ffb74d" stroke-width="1.5"/>
+                    <text x="80" y="112" fill="#aaa" font-size="9" text-anchor="middle">40ft</text>
+                    <text x="80" y="65" fill="#666" font-size="8" text-anchor="middle">Equal both sides</text>
+                    <text x="80" y="77" fill="#666" font-size="8" text-anchor="middle">5ft ← | → 5ft</text>
+                </svg>
+            </div>
+        </div>
+
+        <div style="background:#111;border:1px solid #333;border-radius:8px;padding:12px;margin-bottom:20px;">
+            <div style="color:#e57373;font-weight:bold;font-size:12px;margin-bottom:8px;">CUSTOM OFFSET</div>
+            <svg viewBox="0 0 280 120" style="width:100%;background:#0a0a1a;border-radius:4px;">
+                <text x="140" y="12" fill="#aaa" font-size="9" text-anchor="middle">S=40, N=50, Left offset = 3ft</text>
+                <polygon points="25,25 265,25 245,100 55,100" fill="none" stroke="#e57373" stroke-width="1.5"/>
+                <text x="140" y="112" fill="#aaa" font-size="9" text-anchor="middle">40ft</text>
+                <line x1="25" y1="25" x2="55" y2="100" stroke="#e57373" stroke-width="1" stroke-dasharray="3,3"/>
+                <line x1="265" y1="25" x2="245" y2="100" stroke="#e57373" stroke-width="1" stroke-dasharray="3,3"/>
+                <text x="38" y="70" fill="#e57373" font-size="8" text-anchor="middle">3ft</text>
+                <text x="255" y="70" fill="#e57373" font-size="8" text-anchor="middle">7ft</text>
+                <text x="140" y="65" fill="#666" font-size="8" text-anchor="middle">You specify how much extends left</text>
+                <text x="140" y="77" fill="#666" font-size="8" text-anchor="middle">Remaining goes right automatically</text>
+            </svg>
+        </div>
+
+        <hr style="border-color:#333;margin:16px 0;">
+
+        <h3 style="color:#FFD93D;margin:16px 0 8px;font-size:14px;">When E ≠ W (Height differs)</h3>
+        <p style="font-size:12px;color:#aaa;margin-bottom:8px;">Example: W = 40ft (left), E = 55ft (right) — right side is 15ft taller</p>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+            <div style="flex:1;min-width:180px;background:#111;border:1px solid #333;border-radius:8px;padding:12px;">
+                <div style="color:#4fc3f7;font-weight:bold;font-size:12px;margin-bottom:8px;">BOTTOM-ALIGNED</div>
+                <svg viewBox="0 0 160 120" style="width:100%;background:#0a0a1a;border-radius:4px;">
+                    <polygon points="20,100 140,100 140,20 20,35" fill="none" stroke="#4fc3f7" stroke-width="1.5"/>
+                    <line x1="20" y1="100" x2="140" y2="100" stroke="#4fc3f7" stroke-width="2.5"/>
+                    <text x="8" y="70" fill="#aaa" font-size="8" text-anchor="middle" transform="rotate(-90,8,70)">40ft</text>
+                    <text x="152" y="62" fill="#aaa" font-size="8" text-anchor="middle" transform="rotate(-90,152,62)">55ft</text>
+                    <text x="80" y="72" fill="#666" font-size="8" text-anchor="middle">Bottom flat</text>
+                    <text x="80" y="84" fill="#666" font-size="8" text-anchor="middle">Top slopes up</text>
+                </svg>
+            </div>
+            <div style="flex:1;min-width:180px;background:#111;border:1px solid #333;border-radius:8px;padding:12px;">
+                <div style="color:#81c784;font-weight:bold;font-size:12px;margin-bottom:8px;">TOP-ALIGNED</div>
+                <svg viewBox="0 0 160 120" style="width:100%;background:#0a0a1a;border-radius:4px;">
+                    <polygon points="20,85 140,100 140,20 20,20" fill="none" stroke="#81c784" stroke-width="1.5"/>
+                    <line x1="20" y1="20" x2="140" y2="20" stroke="#81c784" stroke-width="2.5"/>
+                    <text x="8" y="55" fill="#aaa" font-size="8" text-anchor="middle" transform="rotate(-90,8,55)">40ft</text>
+                    <text x="152" y="62" fill="#aaa" font-size="8" text-anchor="middle" transform="rotate(-90,152,62)">55ft</text>
+                    <text x="80" y="55" fill="#666" font-size="8" text-anchor="middle">Top flat</text>
+                    <text x="80" y="67" fill="#666" font-size="8" text-anchor="middle">Bottom slopes down</text>
+                </svg>
+            </div>
+            <div style="flex:1;min-width:180px;background:#111;border:1px solid #333;border-radius:8px;padding:12px;">
+                <div style="color:#ffb74d;font-weight:bold;font-size:12px;margin-bottom:8px;">CENTER</div>
+                <svg viewBox="0 0 160 120" style="width:100%;background:#0a0a1a;border-radius:4px;">
+                    <polygon points="20,92 140,100 140,20 20,28" fill="none" stroke="#ffb74d" stroke-width="1.5"/>
+                    <text x="8" y="62" fill="#aaa" font-size="8" text-anchor="middle" transform="rotate(-90,8,62)">40ft</text>
+                    <text x="152" y="62" fill="#aaa" font-size="8" text-anchor="middle" transform="rotate(-90,152,62)">55ft</text>
+                    <text x="80" y="55" fill="#666" font-size="8" text-anchor="middle">Equal split</text>
+                    <text x="80" y="67" fill="#666" font-size="8" text-anchor="middle">7.5ft top + 7.5ft bottom</text>
+                </svg>
+            </div>
+        </div>
+
+        <div style="background:#111;border:1px solid #333;border-radius:8px;padding:12px;margin-bottom:16px;">
+            <div style="color:#e57373;font-weight:bold;font-size:12px;margin-bottom:8px;">CUSTOM OFFSET</div>
+            <svg viewBox="0 0 280 120" style="width:100%;background:#0a0a1a;border-radius:4px;">
+                <text x="140" y="12" fill="#aaa" font-size="9" text-anchor="middle">W=40, E=55, Bottom offset = 5ft</text>
+                <polygon points="40,88 240,100 240,20 40,32" fill="none" stroke="#e57373" stroke-width="1.5"/>
+                <text x="140" y="65" fill="#666" font-size="8" text-anchor="middle">You specify how much extends below</text>
+                <text x="140" y="77" fill="#666" font-size="8" text-anchor="middle">Remaining (10ft) goes above</text>
+                <text x="28" y="62" fill="#e57373" font-size="8" text-anchor="middle" transform="rotate(-90,28,62)">40ft</text>
+                <text x="252" y="62" fill="#e57373" font-size="8" text-anchor="middle" transform="rotate(-90,252,62)">55ft</text>
+            </svg>
+        </div>
+
+        <div style="background:#1e1e3a;border:1px solid #FFD93D;border-radius:8px;padding:12px;font-size:12px;color:#ddd;">
+            <strong style="color:#FFD93D;">Tip:</strong> These options only appear when dimensions differ. If N=S, width alignment is hidden. If E=W, height alignment is hidden. In Rectangle mode, both are hidden.
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
