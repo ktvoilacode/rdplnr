@@ -1132,30 +1132,15 @@
         <!-- 4. Plot Interior — room/open area inside plot -->
         <div class="section" id="sec-interior">
             <div class="section-header" onclick="toggleSection('sec-interior')">
-                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Plot Interior</h3>
+                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Plot Details</h3>
                 <span class="arrow">&#x25BC;</span>
             </div>
             <div class="section-body">
                 <div class="section-content">
-                    <div class="toggle-row">
-                        <label class="form-label" style="margin-bottom:0">Show Interior Details</label>
-                        <label class="switch">
-                            <input type="checkbox" id="showInterior" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div id="interiorFields">
-                        <div class="form-row" style="margin-top:8px">
-                            <div class="form-group">
-                                <label class="form-label">Room Label</label>
-                                <input id="plot_center_txt" type="text" value="ROOM">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Open Area Label</label>
-                                <input id="open_area_txt" type="text" value="OPEN AREA">
-                            </div>
-                        </div>
-                    </div>
+                    <label class="form-label">Plot Label (center text)</label>
+                    <input id="plot_center_txt" type="text" value="PLOT NO.32">
+                    <input id="open_area_txt" type="hidden" value="">
+                    <input id="showInterior" type="hidden" value="true">
                     <label class="form-label" style="margin-top:8px">Building Type</label>
                     <input id="building_type" type="text" value="A.C.C ROOF">
                     <label class="form-label">Plinth Area (Sq.Fts)</label>
@@ -1295,7 +1280,7 @@ function saveFormData() {
         plinth: document.getElementById('plinth').value,
         wit1: document.getElementById('wit1').value,
         wit2: document.getElementById('wit2').value,
-        showInterior: document.getElementById('showInterior').checked,
+        showInterior: (document.getElementById('showInterior').checked || document.getElementById('showInterior').value === 'true'),
         textSizes: textSizes,
         zoom: currentZoom
     };
@@ -1327,7 +1312,7 @@ function loadFormData() {
         });
 
         if (data.showInterior !== undefined) {
-            document.getElementById('showInterior').checked = data.showInterior;
+            (document.getElementById('showInterior').checked || document.getElementById('showInterior').value === 'true') = data.showInterior;
         }
 
         if (data.textSizes) {
@@ -2092,80 +2077,70 @@ function drawMap() {
         y: (canvasPts[0].y + canvasPts[1].y + canvasPts[2].y + canvasPts[3].y) / 4
     };
 
-    // ---- Interior room box and open area (Layer: Plot) ----
-    if (document.getElementById('showInterior').checked) {
-        var roomCenterY = plotCenterCanvas.y - plotH * 0.15;
-        var roomBoxW = Math.min(plotW * 0.4, 80);
-        var roomBoxH = Math.min(plotH * 0.25, 40);
+    // ---- Plot center text (name/label) ----
+    var plotCenterText = document.getElementById('plot_center_txt').value.toUpperCase();
+    svgText(layerPlot, plotCenterText, plotCenterCanvas.x, plotCenterCanvas.y, textSizes.plotcenter, {
+        fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle',
+        className: 'editable', dataField: 'plot_center_txt'
+    });
+    // Underline below plot name
+    var plotNameW = svgMeasureText(plotCenterText, textSizes.plotcenter, 'bold');
+    svgElem('line', {
+        x1: plotCenterCanvas.x - plotNameW / 2, y1: plotCenterCanvas.y + 5,
+        x2: plotCenterCanvas.x + plotNameW / 2, y2: plotCenterCanvas.y + 5,
+        stroke: '#000', 'stroke-width': 0.6
+    }, layerPlot);
 
-        svgElem('rect', {
-            x: plotCenterCanvas.x - roomBoxW / 2,
-            y: roomCenterY - roomBoxH / 2,
-            width: roomBoxW, height: roomBoxH,
-            fill: 'none', stroke: '#000', 'stroke-width': 0.8
-        }, layerPlot);
+    // ---- DIMENSION TEXT INSIDE THE PLOT ----
+    var DIM_INSET = 15;
 
-        svgText(layerPlot, document.getElementById('plot_center_txt').value.toUpperCase(),
-            plotCenterCanvas.x, roomCenterY, textSizes.plotcenter, {
-                fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle',
-                className: 'editable', dataField: 'plot_center_txt'
-            });
+    // Bottom dimension (inside, above bottom edge)
+    var bottomMid = { x: (canvasPts[0].x + canvasPts[1].x) / 2, y: (canvasPts[0].y + canvasPts[1].y) / 2 };
+    svgText(layerDimensions, ftStr(visBottom), bottomMid.x, bottomMid.y - DIM_INSET, textSizes.dimensions, {
+        textAnchor: 'middle', dominantBaseline: 'middle'
+    });
 
-        // Dashed separator
-        var dashY = roomCenterY + roomBoxH / 2 + 5;
-        var dashLeft = canvasPts[0].x + (canvasPts[3].x - canvasPts[0].x) * ((canvasPts[0].y - dashY) / (canvasPts[0].y - canvasPts[3].y));
-        var dashRight = canvasPts[1].x + (canvasPts[2].x - canvasPts[1].x) * ((canvasPts[1].y - dashY) / (canvasPts[1].y - canvasPts[2].y));
-        if (isNaN(dashLeft)) dashLeft = canvasPts[0].x;
-        if (isNaN(dashRight)) dashRight = canvasPts[1].x;
+    // Top dimension (inside, below top edge)
+    var topMid = { x: (canvasPts[3].x + canvasPts[2].x) / 2, y: (canvasPts[3].y + canvasPts[2].y) / 2 };
+    svgText(layerDimensions, ftStr(visTop), topMid.x, topMid.y + DIM_INSET, textSizes.dimensions, {
+        textAnchor: 'middle', dominantBaseline: 'middle'
+    });
 
-        svgElem('line', {
-            x1: dashLeft, y1: dashY, x2: dashRight, y2: dashY,
-            stroke: '#000', 'stroke-width': 0.6, 'stroke-dasharray': '3,3'
-        }, layerPlot);
-
-        // Open area text
-        var openAreaY = (dashY + canvasPts[0].y) / 2;
-        svgText(layerPlot, document.getElementById('open_area_txt').value.toUpperCase(),
-            plotCenterCanvas.x, openAreaY, textSizes.sidetext + 1, {
-                textAnchor: 'middle', dominantBaseline: 'middle',
-                className: 'editable', dataField: 'open_area_txt'
-            });
-    }
-
-    // ---- DIMENSION LINES (Layer: Dimensions) ----
-    var DIM_OFFSET = Math.max(22, Math.min(38, plotH * 0.08));
-
-    // Bottom (P1 -> P2)
-    drawDimensionLine(canvasPts[0], canvasPts[1], DIM_OFFSET, { x: 0, y: 1 }, ftStr(visBottom));
-    // Top (P4 -> P3)
-    drawDimensionLine(canvasPts[3], canvasPts[2], DIM_OFFSET, { x: 0, y: -1 }, ftStr(visTop));
-
-    // Left (P1 -> P4) - compute outward normal
+    // Left dimension (inside, rotated along left edge)
+    var leftMid = { x: (canvasPts[0].x + canvasPts[3].x) / 2, y: (canvasPts[0].y + canvasPts[3].y) / 2 };
     var leftDx = canvasPts[3].x - canvasPts[0].x;
     var leftDy = canvasPts[3].y - canvasPts[0].y;
+    var leftAngle = Math.atan2(leftDy, leftDx) * 180 / Math.PI;
+    // Compute inward normal (toward center)
     var leftLen = Math.sqrt(leftDx * leftDx + leftDy * leftDy);
     var leftNorm = { x: leftDy / leftLen, y: -leftDx / leftLen };
-    var leftMid = { x: (canvasPts[0].x + canvasPts[3].x) / 2, y: (canvasPts[0].y + canvasPts[3].y) / 2 };
-    var toCenter = { x: plotCenterCanvas.x - leftMid.x, y: plotCenterCanvas.y - leftMid.y };
-    if (leftNorm.x * toCenter.x + leftNorm.y * toCenter.y > 0) {
+    var toCenterL = { x: plotCenterCanvas.x - leftMid.x, y: plotCenterCanvas.y - leftMid.y };
+    if (leftNorm.x * toCenterL.x + leftNorm.y * toCenterL.y < 0) {
         leftNorm.x = -leftNorm.x; leftNorm.y = -leftNorm.y;
     }
-    drawDimensionLine(canvasPts[0], canvasPts[3], DIM_OFFSET, leftNorm, ftStr(visLeft));
+    svgText(layerDimensions, ftStr(visLeft), 0, 0, textSizes.dimensions, {
+        textAnchor: 'middle', dominantBaseline: 'middle',
+        transform: 'translate(' + (leftMid.x + leftNorm.x * DIM_INSET) + ',' + (leftMid.y + leftNorm.y * DIM_INSET) + ') rotate(' + leftAngle + ')'
+    });
 
-    // Right (P2 -> P3)
+    // Right dimension (inside, rotated along right edge)
+    var rightMid = { x: (canvasPts[1].x + canvasPts[2].x) / 2, y: (canvasPts[1].y + canvasPts[2].y) / 2 };
     var rightDx = canvasPts[2].x - canvasPts[1].x;
     var rightDy = canvasPts[2].y - canvasPts[1].y;
+    var rightAngle = Math.atan2(rightDy, rightDx) * 180 / Math.PI;
     var rightLen = Math.sqrt(rightDx * rightDx + rightDy * rightDy);
     var rightNorm = { x: rightDy / rightLen, y: -rightDx / rightLen };
-    var rightMid = { x: (canvasPts[1].x + canvasPts[2].x) / 2, y: (canvasPts[1].y + canvasPts[2].y) / 2 };
     var toCenterR = { x: plotCenterCanvas.x - rightMid.x, y: plotCenterCanvas.y - rightMid.y };
-    if (rightNorm.x * toCenterR.x + rightNorm.y * toCenterR.y > 0) {
+    if (rightNorm.x * toCenterR.x + rightNorm.y * toCenterR.y < 0) {
         rightNorm.x = -rightNorm.x; rightNorm.y = -rightNorm.y;
     }
-    drawDimensionLine(canvasPts[1], canvasPts[2], DIM_OFFSET, rightNorm, ftStr(visRight));
+    svgText(layerDimensions, ftStr(visRight), 0, 0, textSizes.dimensions, {
+        textAnchor: 'middle', dominantBaseline: 'middle',
+        transform: 'translate(' + (rightMid.x + rightNorm.x * DIM_INSET) + ',' + (rightMid.y + rightNorm.y * DIM_INSET) + ') rotate(' + rightAngle + ')'
+    });
 
     // ---- SIDE TEXTS (Layer: Text) ----
-    var SIDE_TEXT_GAP = DIM_OFFSET + textSizes.dimensions + 25;
+    var SIDE_TEXT_GAP = 20;
 
     drawSideText(canvasPts[3], canvasPts[2], SIDE_TEXT_GAP, { x: 0, y: -1 }, textTop, textSizes.sidetext, 'north_txt');
     drawSideText(canvasPts[0], canvasPts[3], SIDE_TEXT_GAP, leftNorm, textLeft, textSizes.sidetext, 'west_txt');
@@ -2239,7 +2214,7 @@ function drawMap() {
 
     // Building type and plinth (if interior shown)
     var sidebarContentY = areaY + lineGap * 2 + 4;
-    if (document.getElementById('showInterior').checked) {
+    if ((document.getElementById('showInterior').checked || document.getElementById('showInterior').value === 'true')) {
         var buildingType = document.getElementById('building_type').value.toUpperCase();
         var plinthArea = parseFloat(document.getElementById('plinth').value) || 0;
         svgText(layerText, buildingType, sidebarX, sidebarContentY, fs, {
@@ -2442,7 +2417,7 @@ function collectFormData() {
         plinth: document.getElementById('plinth').value,
         wit1: document.getElementById('wit1').value,
         wit2: document.getElementById('wit2').value,
-        showInterior: document.getElementById('showInterior').checked,
+        showInterior: (document.getElementById('showInterior').checked || document.getElementById('showInterior').value === 'true'),
         textSizes: JSON.parse(JSON.stringify(textSizes)),
         zoom: currentZoom
     };
@@ -2468,7 +2443,7 @@ function applyFormData(data) {
     });
 
     if (data.showInterior !== undefined) {
-        document.getElementById('showInterior').checked = data.showInterior;
+        (document.getElementById('showInterior').checked || document.getElementById('showInterior').value === 'true') = data.showInterior;
     }
 
     if (data.textSizes) {
@@ -2693,13 +2668,13 @@ function newPlot() {
     document.getElementById('south_txt').value = '';
     document.getElementById('east_txt').value = '';
     document.getElementById('west_txt').value = '';
-    document.getElementById('plot_center_txt').value = 'ROOM';
-    document.getElementById('open_area_txt').value = 'OPEN AREA';
+    document.getElementById('plot_center_txt').value = 'PLOT NO.';
+    document.getElementById('open_area_txt').value = '';
     document.getElementById('building_type').value = 'A.C.C ROOF';
     document.getElementById('plinth').value = '0';
     document.getElementById('wit1').value = '';
     document.getElementById('wit2').value = '';
-    document.getElementById('showInterior').checked = true;
+    (document.getElementById('showInterior').checked || document.getElementById('showInterior').value === 'true') = true;
 
     setActivePlotId(null);
     updateModeUI();
