@@ -1136,43 +1136,29 @@
             </div>
             <div class="section-body">
                 <div class="section-content">
-                    <label class="form-label">North Side</label>
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                        <label class="form-label" style="margin:0;flex:1;">North Side</label>
+                        <span style="font-size:11px;color:#888;">Road</span><label class="switch"><input type="checkbox" id="road_north" onchange="scheduleSave();drawMap()"><span class="slider"></span></label>
+                    </div>
                     <textarea id="north_txt" rows="1">( SOUTH ) OPEN LAND OF PADIDELA THIRUPATHI</textarea>
 
-                    <label class="form-label">South Side</label>
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                        <label class="form-label" style="margin:0;flex:1;">South Side</label>
+                        <span style="font-size:11px;color:#888;">Road</span><label class="switch"><input type="checkbox" id="road_south" checked onchange="scheduleSave();drawMap()"><span class="slider"></span></label>
+                    </div>
                     <textarea id="south_txt" rows="1">( NORTH ) ROAD</textarea>
 
-                    <label class="form-label">East Side</label>
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                        <label class="form-label" style="margin:0;flex:1;">East Side</label>
+                        <span style="font-size:11px;color:#888;">Road</span><label class="switch"><input type="checkbox" id="road_east" onchange="scheduleSave();drawMap()"><span class="slider"></span></label>
+                    </div>
                     <textarea id="east_txt" rows="2">( EAST ) H.NO.31-1-86 PART OF VENDOR SOLD TO PADIDELA SHEKAR & PADIDHLA SRINIVAS</textarea>
 
-                    <label class="form-label">West Side</label>
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                        <label class="form-label" style="margin:0;flex:1;">West Side</label>
+                        <span style="font-size:11px;color:#888;">Road</span><label class="switch"><input type="checkbox" id="road_west" onchange="scheduleSave();drawMap()"><span class="slider"></span></label>
+                    </div>
                     <textarea id="west_txt" rows="1">( WEST ) OPEN LAND OF OTHERS</textarea>
-
-                    <div class="form-row" style="margin-top: 10px;">
-                        <div class="form-group">
-                            <label class="form-label">Road Direction</label>
-                            <select id="road_direction">
-                                <option value="south" selected>South</option>
-                                <option value="north">North</option>
-                                <option value="east">East</option>
-                                <option value="west">West</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Road Label</label>
-                            <input id="road_text" type="text" value="( SOUTH ) ROAD">
-                        </div>
-                    </div>
-                    <div class="form-row" style="margin-top: 6px;">
-                        <div class="form-group">
-                            <label class="form-label">Road Width (ft)</label>
-                            <input id="road_width" type="number" value="30" min="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Road Number</label>
-                            <input id="road_number" type="text" placeholder="e.g. NO.4">
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1382,10 +1368,10 @@ function saveFormData() {
         e_in: document.getElementById('e_in').value,
         w_ft: document.getElementById('w_ft').value,
         w_in: document.getElementById('w_in').value,
-        road_direction: document.getElementById('road_direction').value,
-        road_text: document.getElementById('road_text').value,
-        road_width: document.getElementById('road_width').value,
-        road_number: document.getElementById('road_number').value,
+        road_north: document.getElementById('road_north').checked,
+        road_south: document.getElementById('road_south').checked,
+        road_east: document.getElementById('road_east').checked,
+        road_west: document.getElementById('road_west').checked,
         title: document.getElementById('title').value,
         vendor: document.getElementById('vendor').value,
         vendees: document.getElementById('vendees').value,
@@ -1443,13 +1429,19 @@ function loadFormData() {
             if (data[id] !== undefined) document.getElementById(id).value = data[id];
         });
 
-        var textFields = ['road_direction','road_text','road_width','road_number',
+        var textFields = [
             'title','vendor','vendees','vendor_label','vendee_label','sig_label_1','sig_label_2',
             'north_txt','south_txt','east_txt','west_txt',
             'plot_center_txt','open_area_txt','building_type','plinth','wit1','wit2',
-            'room_label','room_w_ft','room_w_in','room_h_ft','room_h_in'];
+            'room_label','room_w_ft','room_w_in','room_h_ft','room_h_in',
+];
         textFields.forEach(function(id) {
             if (data[id] !== undefined) document.getElementById(id).value = data[id];
+        });
+
+        // Restore road checkboxes
+        ['road_north','road_south','road_east','road_west'].forEach(function(id) {
+            if (data[id] !== undefined) document.getElementById(id).checked = data[id];
         });
 
         if (data.showInterior !== undefined) {
@@ -1920,11 +1912,6 @@ function getRoadMapping() {
     return { bottom: 'S', top: 'N', left: 'W', right: 'E' };
 }
 
-function getRoadSide(roadDir) {
-    var sides = { 'south': 'bottom', 'north': 'top', 'east': 'right', 'west': 'left' };
-    return sides[roadDir] || 'bottom';
-}
-
 function getDimForVisualSide(mapping, side, dims) {
     return dims[mapping[side]];
 }
@@ -2173,87 +2160,101 @@ function countSideTextLines(p1, p2, text, fontSize) {
 }
 
 // ==================== ROAD INDICATOR (SVG) ====================
-function drawRoadIndicator(p1, p2, roadText, side, sideTextGap, roadWidthFt, scale) {
+function drawRoadIndicator(p1, p2, sideLabel, side, scale, sideOffset) {
     var layer = layerText;
     var fs = textSizes.sidetext;
 
-    // Road width in SVG units (scaled)
-    var roadW = Math.min(roadWidthFt * scale * 0.4, 40); // cap for visual sanity
-
-    // Compute outward normal for the road side
     var edgeDx = p2.x - p1.x;
     var edgeDy = p2.y - p1.y;
     var edgeLen = Math.sqrt(edgeDx * edgeDx + edgeDy * edgeDy);
     if (edgeLen === 0) return;
 
-    var outNorm;
-    if (side === 'bottom') outNorm = { x: 0, y: 1 };
-    else if (side === 'top') outNorm = { x: 0, y: -1 };
-    else if (side === 'left') outNorm = { x: -1, y: 0 };
-    else outNorm = { x: 1, y: 0 };
-
-    // Road starts just outside the plot edge
-    var roadStart = sideTextGap + 5;
-
-    // Two corners of road near side (offset from plot edge)
-    var r1s = { x: p1.x + outNorm.x * roadStart, y: p1.y + outNorm.y * roadStart };
-    var r2s = { x: p2.x + outNorm.x * roadStart, y: p2.y + outNorm.y * roadStart };
-    // Two corners of road far side
-    var r1e = { x: p1.x + outNorm.x * (roadStart + roadW), y: p1.y + outNorm.y * (roadStart + roadW) };
-    var r2e = { x: p2.x + outNorm.x * (roadStart + roadW), y: p2.y + outNorm.y * (roadStart + roadW) };
-
-    // Perpendicular tick marks at corners of plot edge (extending into road)
-    var tickLen = roadStart + roadW + 8;
-    svgElem('line', {
-        x1: p1.x, y1: p1.y,
-        x2: p1.x + outNorm.x * tickLen, y2: p1.y + outNorm.y * tickLen,
-        stroke: '#000', 'stroke-width': 0.6
-    }, layer);
-    svgElem('line', {
-        x1: p2.x, y1: p2.y,
-        x2: p2.x + outNorm.x * tickLen, y2: p2.y + outNorm.y * tickLen,
-        stroke: '#000', 'stroke-width': 0.6
-    }, layer);
-
-    // Far-side road line (dashed)
-    svgElem('line', {
-        x1: r1e.x, y1: r1e.y, x2: r2e.x, y2: r2e.y,
-        stroke: '#000', 'stroke-width': 0.6
-    }, layer);
-
-    // Road directional arrows at ends
-    var arrowExt = 12;
+    // Unit vectors
     var eux = edgeDx / edgeLen, euy = edgeDy / edgeLen;
-    var roadMidOffset = roadStart + roadW / 2;
-    // Midline of road
-    var rm1 = { x: p1.x + outNorm.x * roadMidOffset - eux * arrowExt, y: p1.y + outNorm.y * roadMidOffset - euy * arrowExt };
-    var rm2 = { x: p2.x + outNorm.x * roadMidOffset + eux * arrowExt, y: p2.y + outNorm.y * roadMidOffset + euy * arrowExt };
 
-    // Arrow at rm1 (pointing outward from edge)
-    var aSize = 4;
-    svgElem('line', { x1: rm1.x, y1: rm1.y, x2: rm1.x + eux * aSize + outNorm.x * aSize * 0.5, y2: rm1.y + euy * aSize + outNorm.y * aSize * 0.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
-    svgElem('line', { x1: rm1.x, y1: rm1.y, x2: rm1.x + eux * aSize - outNorm.x * aSize * 0.5, y2: rm1.y + euy * aSize - outNorm.y * aSize * 0.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
-    // Arrow at rm2
-    svgElem('line', { x1: rm2.x, y1: rm2.y, x2: rm2.x - eux * aSize + outNorm.x * aSize * 0.5, y2: rm2.y - euy * aSize + outNorm.y * aSize * 0.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
-    svgElem('line', { x1: rm2.x, y1: rm2.y, x2: rm2.x - eux * aSize - outNorm.x * aSize * 0.5, y2: rm2.y - euy * aSize - outNorm.y * aSize * 0.5, stroke: '#000', 'stroke-width': 0.8 }, layer);
+    // Compute outward normal perpendicular to the actual edge (follows slant)
+    var outNorm;
+    if (side === 'bottom') outNorm = { x: -euy, y: eux };   // rotate edge 90° CW (outward = downward)
+    else if (side === 'top') outNorm = { x: euy, y: -eux };  // rotate edge 90° CCW (outward = upward)
+    else if (side === 'left') outNorm = { x: euy, y: -eux };
+    else outNorm = { x: -euy, y: eux };
 
-    // Road text (centered on road)
-    var roadCenterX = (p1.x + p2.x) / 2 + outNorm.x * roadMidOffset;
-    var roadCenterY = (p1.y + p2.y) / 2 + outNorm.y * roadMidOffset;
+    // Ensure outward normal actually points away from plot center
+    // For bottom: outNorm.y should be positive; for top: negative; left: x negative; right: x positive
+    if (side === 'bottom' && outNorm.y < 0) { outNorm.x = -outNorm.x; outNorm.y = -outNorm.y; }
+    if (side === 'top' && outNorm.y > 0) { outNorm.x = -outNorm.x; outNorm.y = -outNorm.y; }
+    if (side === 'left' && outNorm.x > 0) { outNorm.x = -outNorm.x; outNorm.y = -outNorm.y; }
+    if (side === 'right' && outNorm.x < 0) { outNorm.x = -outNorm.x; outNorm.y = -outNorm.y; }
 
-    if (side === 'bottom' || side === 'top') {
-        svgText(layer, roadText.toUpperCase(), roadCenterX, roadCenterY + 2, fs, {
-            fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle',
-            className: 'editable', dataField: 'road_text'
-        });
-    } else {
-        var angle = side === 'left' ? 90 : -90;
-        svgText(layer, roadText.toUpperCase(), 0, 2, fs, {
-            fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle',
-            transform: 'translate(' + roadCenterX + ',' + roadCenterY + ') rotate(' + angle + ')',
-            className: 'editable', dataField: 'road_text'
-        });
+    // Apply side offset — shift the base edge outward
+    var baseOff = sideOffset || 0;
+    var bp1 = { x: p1.x + outNorm.x * baseOff, y: p1.y + outNorm.y * baseOff };
+    var bp2 = { x: p2.x + outNorm.x * baseOff, y: p2.y + outNorm.y * baseOff };
+
+    // Extension: edge extends slightly beyond corners
+    var ext = 12;
+    var e1 = { x: bp1.x - eux * ext, y: bp1.y - euy * ext };
+    var e2 = { x: bp2.x + eux * ext, y: bp2.y + euy * ext };
+
+    // Draw extended edge lines (from corner outward)
+    svgElem('line', { x1: bp1.x, y1: bp1.y, x2: e1.x, y2: e1.y, stroke: '#000', 'stroke-width': 0.8 }, layer);
+    svgElem('line', { x1: bp2.x, y1: bp2.y, x2: e2.x, y2: e2.y, stroke: '#000', 'stroke-width': 0.8 }, layer);
+
+    // Far-side road line (parallel to edge, offset outward)
+    var farDist = 35;
+    var f1 = { x: e1.x + outNorm.x * farDist, y: e1.y + outNorm.y * farDist };
+    var f2 = { x: e2.x + outNorm.x * farDist, y: e2.y + outNorm.y * farDist };
+    svgElem('line', { x1: f1.x, y1: f1.y, x2: f2.x, y2: f2.y, stroke: '#000', 'stroke-width': 0.8 }, layer);
+
+    // Break/zigzag symbol at both ends connecting extended edge to far line
+    drawBreakSymbol(layer, e1, f1, outNorm, eux, euy);
+    drawBreakSymbol(layer, e2, f2, outNorm, eux, euy);
+
+    // Arrow marks at ends of far-side line
+    var aSize = 5;
+    svgElem('line', { x1: f1.x, y1: f1.y, x2: f1.x + eux * aSize + outNorm.x * aSize * 0.4, y2: f1.y + euy * aSize + outNorm.y * aSize * 0.4, stroke: '#000', 'stroke-width': 0.8 }, layer);
+    svgElem('line', { x1: f1.x, y1: f1.y, x2: f1.x + eux * aSize - outNorm.x * aSize * 0.4, y2: f1.y + euy * aSize - outNorm.y * aSize * 0.4, stroke: '#000', 'stroke-width': 0.8 }, layer);
+    svgElem('line', { x1: f2.x, y1: f2.y, x2: f2.x - eux * aSize + outNorm.x * aSize * 0.4, y2: f2.y - euy * aSize + outNorm.y * aSize * 0.4, stroke: '#000', 'stroke-width': 0.8 }, layer);
+    svgElem('line', { x1: f2.x, y1: f2.y, x2: f2.x - eux * aSize - outNorm.x * aSize * 0.4, y2: f2.y - euy * aSize - outNorm.y * aSize * 0.4, stroke: '#000', 'stroke-width': 0.8 }, layer);
+
+    // Road text centered between plot edge and far line, rotated to follow edge angle
+    var roadMidX = (bp1.x + bp2.x) / 2 + outNorm.x * farDist / 2;
+    var roadMidY = (bp1.y + bp2.y) / 2 + outNorm.y * farDist / 2;
+    var roadText = sideLabel;
+    var edgeAngle = Math.atan2(edgeDy, edgeDx) * 180 / Math.PI;
+
+    svgText(layer, roadText.toUpperCase(), 0, 0, fs, {
+        textAnchor: 'middle', dominantBaseline: 'middle',
+        transform: 'translate(' + roadMidX + ',' + roadMidY + ') rotate(' + edgeAngle + ')'
+    });
+}
+
+// Break/zigzag symbol (flash line connecting two points)
+function drawBreakSymbol(layer, start, end, outNorm, eux, euy) {
+    var dx = end.x - start.x;
+    var dy = end.y - start.y;
+    var len = Math.sqrt(dx * dx + dy * dy);
+    if (len === 0) return;
+
+    // Zigzag: start -> 1/4 with jog left -> 1/2 with jog right -> 3/4 with jog left -> end
+    var zigSize = 4; // perpendicular jog size
+    var pts = [];
+    pts.push(start.x + ',' + start.y);
+
+    for (var i = 1; i <= 3; i++) {
+        var t = i / 4;
+        var mx = start.x + dx * t;
+        var my = start.y + dy * t;
+        var jog = (i % 2 === 1) ? zigSize : -zigSize;
+        pts.push((mx + eux * jog) + ',' + (my + euy * jog));
     }
+
+    pts.push(end.x + ',' + end.y);
+
+    svgElem('polyline', {
+        points: pts.join(' '),
+        fill: 'none', stroke: '#000', 'stroke-width': 0.8
+    }, layer);
 }
 
 // ==================== MAIN DRAW FUNCTION ====================
@@ -2281,7 +2282,6 @@ function drawMap() {
 
     var mode = getMode();
     var isRect = (mode === 'rectangle');
-    var roadDir = document.getElementById('road_direction').value;
     var mapping = getRoadMapping();
 
     var dims = { N: N, S: S, E: E, W: W };
@@ -2631,45 +2631,24 @@ function drawMap() {
         });
     }
 
-    // ---- SIDE TEXTS outside the plot (Layer: Text) ----
+    // ---- ROAD & SIDE TEXTS ----
     var SIDE_TEXT_GAP = dimsOutside ? 55 : 30;
+    var roadN = document.getElementById('road_north').checked;
+    var roadS = document.getElementById('road_south').checked;
+    var roadE = document.getElementById('road_east').checked;
+    var roadW = document.getElementById('road_west').checked;
 
-    drawSideText(canvasPts[3], canvasPts[2], SIDE_TEXT_GAP + sideOffsets.N, { x: 0, y: -1 }, textTop, textSizes.sidetext, 'north_txt');
-    drawSideText(canvasPts[0], canvasPts[3], SIDE_TEXT_GAP + sideOffsets.W, leftOutNorm, textLeft, textSizes.sidetext, 'west_txt');
-    drawSideText(canvasPts[1], canvasPts[2], SIDE_TEXT_GAP + sideOffsets.E, rightOutNorm, textRight, textSizes.sidetext, 'east_txt');
+    // Side texts — skip sides that have road enabled (road indicator shows the text instead)
+    if (!roadN) drawSideText(canvasPts[3], canvasPts[2], SIDE_TEXT_GAP + sideOffsets.N, { x: 0, y: -1 }, textTop, textSizes.sidetext, 'north_txt');
+    if (!roadW) drawSideText(canvasPts[0], canvasPts[3], SIDE_TEXT_GAP + sideOffsets.W, leftOutNorm, textLeft, textSizes.sidetext, 'west_txt');
+    if (!roadE) drawSideText(canvasPts[1], canvasPts[2], SIDE_TEXT_GAP + sideOffsets.E, rightOutNorm, textRight, textSizes.sidetext, 'east_txt');
+    if (!roadS) drawSideText(canvasPts[0], canvasPts[1], SIDE_TEXT_GAP + sideOffsets.S, { x: 0, y: 1 }, textBottom, textSizes.sidetext, 'south_txt');
 
-    // Bottom side text
-    drawSideText(canvasPts[0], canvasPts[1], SIDE_TEXT_GAP + sideOffsets.S, { x: 0, y: 1 }, textBottom, textSizes.sidetext, 'south_txt');
-
-    // ---- ROAD INDICATOR ----
-    var roadSide = getRoadSide(roadDir);
-    var roadText = document.getElementById('road_text').value;
-    var roadWidthFt = parseFloat(document.getElementById('road_width').value) || 30;
-    var roadNumber = document.getElementById('road_number').value.trim();
-
-    // Build road display text: combine road text + width + number
-    var roadDisplayText = roadText;
-    if (roadWidthFt > 0) {
-        var roadWidthStr = roadWidthFt + "'-0\"";
-        // Append road width to text if not already there
-        if (roadDisplayText.indexOf("WIDE") === -1 && roadDisplayText.indexOf("wide") === -1) {
-            roadDisplayText += ' ' + roadWidthStr + ' WIDE ROAD';
-            if (roadNumber) roadDisplayText += ' ' + roadNumber;
-        }
-    }
-
-    var roadEdgeP1, roadEdgeP2;
-    if (roadSide === 'bottom') {
-        roadEdgeP1 = canvasPts[0]; roadEdgeP2 = canvasPts[1];
-    } else if (roadSide === 'top') {
-        roadEdgeP1 = canvasPts[3]; roadEdgeP2 = canvasPts[2];
-    } else if (roadSide === 'left') {
-        roadEdgeP1 = canvasPts[0]; roadEdgeP2 = canvasPts[3];
-    } else {
-        roadEdgeP1 = canvasPts[1]; roadEdgeP2 = canvasPts[2];
-    }
-
-    drawRoadIndicator(roadEdgeP1, roadEdgeP2, roadDisplayText, roadSide, SIDE_TEXT_GAP, roadWidthFt, scale);
+    // Road indicators (pass side offset for position adjustment)
+    if (roadN) drawRoadIndicator(canvasPts[3], canvasPts[2], textTop, 'top', scale, SIDE_TEXT_GAP + sideOffsets.N);
+    if (roadS) drawRoadIndicator(canvasPts[0], canvasPts[1], textBottom, 'bottom', scale, SIDE_TEXT_GAP + sideOffsets.S);
+    if (roadE) drawRoadIndicator(canvasPts[1], canvasPts[2], textRight, 'right', scale, SIDE_TEXT_GAP + sideOffsets.E);
+    if (roadW) drawRoadIndicator(canvasPts[0], canvasPts[3], textLeft, 'left', scale, SIDE_TEXT_GAP + sideOffsets.W);
 
     // ============================================================
     // RIGHT SIDEBAR (40%) - References + Vendor Signature
@@ -2788,9 +2767,6 @@ var fieldToSection = {
     south_txt: 'sec-boundaries',
     east_txt: 'sec-boundaries',
     west_txt: 'sec-boundaries',
-    road_text: 'sec-boundaries',
-    road_width: 'sec-boundaries',
-    road_number: 'sec-boundaries',
     plot_center_txt: 'sec-interior',
     open_area_txt: 'sec-interior',
     building_type: 'sec-interior',
@@ -2906,10 +2882,10 @@ function collectFormData() {
         e_in: document.getElementById('e_in').value,
         w_ft: document.getElementById('w_ft').value,
         w_in: document.getElementById('w_in').value,
-        road_direction: document.getElementById('road_direction').value,
-        road_text: document.getElementById('road_text').value,
-        road_width: document.getElementById('road_width').value,
-        road_number: document.getElementById('road_number').value,
+        road_north: document.getElementById('road_north').checked,
+        road_south: document.getElementById('road_south').checked,
+        road_east: document.getElementById('road_east').checked,
+        road_west: document.getElementById('road_west').checked,
         title: document.getElementById('title').value,
         vendor: document.getElementById('vendor').value,
         vendees: document.getElementById('vendees').value,
@@ -2961,13 +2937,18 @@ function applyFormData(data) {
         if (data[id] !== undefined) document.getElementById(id).value = data[id];
     });
 
-    var textFields = ['road_direction','road_text','road_width','road_number',
+    var textFields = [
         'title','vendor','vendees','vendor_label','vendee_label','sig_label_1','sig_label_2',
         'north_txt','south_txt','east_txt','west_txt',
         'plot_center_txt','open_area_txt','building_type','plinth','wit1','wit2',
         'room_label','room_w_ft','room_w_in','room_h_ft','room_h_in'];
     textFields.forEach(function(id) {
         if (data[id] !== undefined) document.getElementById(id).value = data[id];
+    });
+
+    // Restore road checkboxes
+    ['road_north','road_south','road_east','road_west'].forEach(function(id) {
+        if (data[id] !== undefined) document.getElementById(id).checked = data[id];
     });
 
     if (data.showInterior !== undefined) {
@@ -3217,10 +3198,10 @@ function newPlot() {
     document.getElementById('e_in').value = '0';
     document.getElementById('w_ft').value = '20';
     document.getElementById('w_in').value = '0';
-    document.getElementById('road_direction').value = 'south';
-    document.getElementById('road_text').value = '( SOUTH )';
-    document.getElementById('road_width').value = '30';
-    document.getElementById('road_number').value = '';
+    // Reset road checkboxes
+    ['north','south','east','west'].forEach(function(side) {
+        document.getElementById('road_' + side).checked = (side === 'south');
+    });
     document.getElementById('title').value = '';
     document.getElementById('vendor').value = '';
     document.getElementById('vendees').value = '';
