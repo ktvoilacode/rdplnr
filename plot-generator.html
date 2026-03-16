@@ -1030,6 +1030,9 @@
                     <label class="form-label">Vendor</label>
                     <input id="vendor" type="text" value="PADIDA VENKATALAXMI, W/o. AILAIAH @ PADIDELA ILAIAH">
 
+                    <label class="form-label">Rep. By (optional)</label>
+                    <textarea id="rep_by" rows="2" placeholder="M/s. COMPANY NAME,&#10;REP.BY NAME W/o. ..."></textarea>
+
                     <label class="form-label">Vendees (one per line)</label>
                     <textarea id="vendees" rows="2">1.PARDALA MOHAN, S/o. PARDALA MOGILI
 2.PADIDALA RAJINIKANTH, S/o. PADIDALA MOGILI</textarea>
@@ -1280,6 +1283,7 @@ function saveFormData() {
         road_text: document.getElementById('road_text').value,
         title: document.getElementById('title').value,
         vendor: document.getElementById('vendor').value,
+        rep_by: document.getElementById('rep_by').value,
         vendees: document.getElementById('vendees').value,
         north_txt: document.getElementById('north_txt').value,
         south_txt: document.getElementById('south_txt').value,
@@ -1315,7 +1319,7 @@ function loadFormData() {
             if (data[id] !== undefined) document.getElementById(id).value = data[id];
         });
 
-        var textFields = ['road_direction','road_text','title','vendor','vendees',
+        var textFields = ['road_direction','road_text','title','vendor','rep_by','vendees',
             'north_txt','south_txt','east_txt','west_txt',
             'plot_center_txt','open_area_txt','building_type','plinth','wit1','wit2'];
         textFields.forEach(function(id) {
@@ -1663,6 +1667,7 @@ function svgText(layer, text, x, y, fontSize, opts) {
         fill: opts.fill || '#000'
     };
     if (opts.transform) attrs.transform = opts.transform;
+    if (opts.textDecoration) attrs['text-decoration'] = opts.textDecoration;
     var el = svgElem('text', attrs, layer);
     if (opts.className) el.setAttribute('class', opts.className);
     if (opts.dataField) el.setAttribute('data-field', opts.dataField);
@@ -1955,53 +1960,73 @@ function drawMap() {
     // ZONE 1 - HEADER
     // ============================================================
     var zone1Top = MARGIN + 5;
-    var zone1Height = 145;
 
-    // Title text
+    // Title text (leave space for compass on right)
     var titleText = document.getElementById('title').value.toUpperCase();
-    var titleEndY = svgWrapText(layerText, titleText, A4_WIDTH / 2, zone1Top + 15, PAGE_WIDTH - 40, textSizes.title + 2, textSizes.title, {
-        fontWeight: 'bold', textAnchor: 'middle', className: 'editable', dataField: 'title'
+    var titleEndY = svgWrapText(layerText, titleText, MARGIN + 15, zone1Top + 15, PAGE_WIDTH - 100, textSizes.title + 2, textSizes.title, {
+        fontWeight: 'bold', className: 'editable', dataField: 'title'
     });
 
+    // Compass rose (top-right of header)
+    drawCompass(layerText, MARGIN + PAGE_WIDTH - 35, zone1Top + 40, 16);
+
     // Vendor / Vendee
-    var vendorY = titleEndY + textSizes.title + 12;
-    var vendorLabelW = svgMeasureText('VENDOR', textSizes.vendor, 'bold');
-    var vendeeLabelW = svgMeasureText('VENDEES', textSizes.vendor, 'bold');
+    var vendorY = titleEndY + textSizes.title + 10;
+    var vendorLabelW = svgMeasureText('VENDORS', textSizes.vendor, 'bold');
+    var vendeeLabelW = svgMeasureText('VENDEE', textSizes.vendor, 'bold');
     var labelColW = Math.max(vendorLabelW, vendeeLabelW) + 8;
     var colonX = MARGIN + 15 + labelColW;
 
     // Vendor label
-    svgText(layerText, 'VENDOR', MARGIN + 15, vendorY, textSizes.vendor, { fontWeight: 'bold' });
+    svgText(layerText, 'VENDORS', MARGIN + 15, vendorY, textSizes.vendor, { fontWeight: 'bold', textDecoration: 'underline' });
     var vendorText = document.getElementById('vendor').value.toUpperCase();
-    var vendorEndY = svgWrapText(layerText, ': ' + vendorText, colonX, vendorY, PAGE_WIDTH - labelColW - 40, textSizes.vendor + 3, textSizes.vendor, {
+    var vendorEndY = svgWrapText(layerText, ': ' + vendorText, colonX, vendorY, PAGE_WIDTH - labelColW - 100, textSizes.vendor + 3, textSizes.vendor, {
         className: 'editable', dataField: 'vendor'
     });
 
-    // Vendees
-    var vendeeY = vendorEndY + textSizes.vendor + 6;
-    svgText(layerText, 'VENDEES', MARGIN + 15, vendeeY, textSizes.vendor, { fontWeight: 'bold' });
+    // Rep By (optional)
+    var repByText = document.getElementById('rep_by').value.trim().toUpperCase();
+    var lastHeaderY = vendorEndY;
+    if (repByText) {
+        var repByY = vendorEndY + textSizes.vendor + 4;
+        var repLines = repByText.split('\n');
+        for (var ri = 0; ri < repLines.length; ri++) {
+            var repPrefix = ri === 0 ? 'REP.BY' : '';
+            if (repPrefix) {
+                svgText(layerText, repPrefix, MARGIN + 50, repByY + ri * (textSizes.vendor + 3), textSizes.vendor, {});
+            }
+            lastHeaderY = svgWrapText(layerText, repLines[ri], colonX + 20, repByY + ri * (textSizes.vendor + 3), PAGE_WIDTH - labelColW - 100, textSizes.vendor + 3, textSizes.vendor, {});
+        }
+    }
+
+    // Vendee
+    var vendeeY = lastHeaderY + textSizes.vendor + 6;
+    svgText(layerText, 'VENDEE', MARGIN + 15, vendeeY, textSizes.vendor, { fontWeight: 'bold', textDecoration: 'underline' });
     var vendeeLines = document.getElementById('vendees').value.toUpperCase().split('\n');
     var lastVendeeY = vendeeY;
     for (var vi = 0; vi < vendeeLines.length; vi++) {
         var prefix = vi === 0 ? ': ' : '  ';
-        lastVendeeY = svgWrapText(layerText, prefix + vendeeLines[vi], colonX, vendeeY + vi * (textSizes.vendor + 4), PAGE_WIDTH - labelColW - 40, textSizes.vendor + 3, textSizes.vendor, {
+        lastVendeeY = svgWrapText(layerText, prefix + vendeeLines[vi], colonX, vendeeY + vi * (textSizes.vendor + 4), PAGE_WIDTH - labelColW - 100, textSizes.vendor + 3, textSizes.vendor, {
             className: 'editable', dataField: 'vendees'
         });
     }
 
     // ============================================================
-    // ZONE 2 - DRAWING AREA (dynamically sized)
+    // ZONE 2 - DRAWING (left ~60%) + SIDEBAR (right ~40%)
     // ============================================================
-    var zone2Top = Math.max(MARGIN + zone1Height, lastVendeeY + textSizes.vendor + 15);
-    var FOOTER_HEIGHT = 280;
+    var zone2Top = lastVendeeY + textSizes.vendor + 15;
+    var FOOTER_HEIGHT = 90;
     var zone3Top = A4_HEIGHT - MARGIN - FOOTER_HEIGHT;
     var zone2Height = zone3Top - zone2Top - 10;
 
-    var DRAW_MARGIN = 60 + textSizes.dimensions + textSizes.sidetext * 2;
-    var DRAW_WIDTH = Math.min(380, A4_WIDTH - 2 * MARGIN - 2 * DRAW_MARGIN);
-    var DRAW_HEIGHT = Math.min(380, zone2Height - 2 * DRAW_MARGIN);
+    var SIDEBAR_WIDTH = PAGE_WIDTH * 0.35;
+    var PLOT_ZONE_WIDTH = PAGE_WIDTH - SIDEBAR_WIDTH - 15;
 
-    var drawCenterX = A4_WIDTH / 2;
+    var DRAW_MARGIN = 60 + textSizes.dimensions + textSizes.sidetext * 2;
+    var DRAW_WIDTH = Math.min(300, PLOT_ZONE_WIDTH - 2 * DRAW_MARGIN);
+    var DRAW_HEIGHT = Math.min(350, zone2Height - 2 * DRAW_MARGIN);
+
+    var drawCenterX = MARGIN + PLOT_ZONE_WIDTH / 2;
     var drawCenterY = zone2Top + zone2Height / 2;
 
     // ---- COORDINATE SYSTEM (Origin-based, bottom-left = 0,0) ----
@@ -2178,111 +2203,84 @@ function drawMap() {
     drawRoadIndicator(roadEdgeP1, roadEdgeP2, roadText, roadSide, roadOffset);
 
     // ============================================================
-    // ZONE 3 - FOOTER (Layer: Text)
+    // RIGHT SIDEBAR - References + Vendor Signature
     // ============================================================
     var fs = textSizes.sidetext;
     var fv = textSizes.vendor;
     var lineGap = fs + 5;
 
-    // References section (left)
-    var footerGap = 12;
-    var refBoxX = MARGIN + 15;
-    var refBoxY = zone3Top + 5;
-    var refBoxW = (PAGE_WIDTH - 30 - footerGap) * 0.55;
+    var sidebarX = MARGIN + PLOT_ZONE_WIDTH + 15;
+    var sidebarY = zone2Top + 5;
+    var sidebarW = SIDEBAR_WIDTH - 10;
 
-    svgText(layerText, 'REFERENCES', refBoxX, refBoxY + 8 + fv, fv, { fontWeight: 'bold' });
+    // REFERENCES heading
+    svgText(layerText, 'REFERENCES', sidebarX, sidebarY + fv, fv, { fontWeight: 'bold', textDecoration: 'underline' });
 
     // Including with red box
-    var inclY = refBoxY + 8 + fv + 6 + fs;
+    var inclY = sidebarY + fv + 8 + fs;
+    svgText(layerText, 'INCLUDING :', sidebarX, inclY, fs, {});
     svgElem('rect', {
-        x: refBoxX, y: inclY - fs + 2, width: 10, height: 7,
-        fill: 'none', stroke: 'red', 'stroke-width': 1
+        x: sidebarX + svgMeasureText('INCLUDING : ', fs) + 4, y: inclY - fs + 2, width: 12, height: 8,
+        fill: 'none', stroke: 'red', 'stroke-width': 1.2
     }, layerText);
-    svgText(layerText, 'INCLUDING', refBoxX + 15, inclY, fs, {});
 
-    // Area details
-    var areaY = inclY + lineGap + 2;
-    // Area details — aligned columns: label | colon | value
-    var areaLabelX = refBoxX;
-    var areaColonX = refBoxX + svgMeasureText('TOTAL AREA', fs) + 6;
+    // Area: Sq.Yds and Sq.Mts
+    var areaY = inclY + lineGap + 6;
+    var areaColonX = sidebarX + svgMeasureText('TOTAL AREA ', fs) + 4;
     var areaValueX = areaColonX + svgMeasureText(': ', fs) + 2;
 
-    svgText(layerText, 'TOTAL AREA', areaLabelX, areaY, fs, {});
+    svgText(layerText, 'TOTAL AREA', sidebarX, areaY, fs, {});
     svgText(layerText, ':', areaColonX, areaY, fs, {});
-    svgText(layerText, area.sqft.toFixed(2) + ' Sq.Fts', areaValueX, areaY, fs, {});
+    svgText(layerText, area.sqyd.toFixed(2) + ' Sq.Yds.', areaValueX, areaY, fs, {});
 
+    svgText(layerText, '(OR)', sidebarX, areaY + lineGap, fs, {});
     svgText(layerText, ':', areaColonX, areaY + lineGap, fs, {});
-    svgText(layerText, area.sqyd.toFixed(2) + ' Sq.Yds', areaValueX, areaY + lineGap, fs, {});
+    svgText(layerText, area.sqm.toFixed(2) + ' Sq.Mts.', areaValueX, areaY + lineGap, fs, {});
 
-    svgText(layerText, '( OR )', areaLabelX, areaY + lineGap * 2, fs, {});
-    svgText(layerText, ':', areaColonX, areaY + lineGap * 2, fs, {});
-    svgText(layerText, area.sqm.toFixed(2) + ' Sq.Mtrs', areaValueX, areaY + lineGap * 2, fs, {});
+    // Building type and plinth (if interior shown)
+    var sidebarContentY = areaY + lineGap * 2 + 4;
+    if (document.getElementById('showInterior').checked) {
+        var buildingType = document.getElementById('building_type').value.toUpperCase();
+        var plinthArea = parseFloat(document.getElementById('plinth').value) || 0;
+        svgText(layerText, buildingType, sidebarX, sidebarContentY, fs, {
+            className: 'editable', dataField: 'building_type'
+        });
+        sidebarContentY += lineGap;
+        svgText(layerText, 'PLINTH AREA', sidebarX, sidebarContentY, fs, {});
+        svgText(layerText, ':', areaColonX, sidebarContentY, fs, {});
+        svgText(layerText, plinthArea.toFixed(2) + ' Sq.Fts.', areaValueX, sidebarContentY, fs, {
+            className: 'editable', dataField: 'plinth'
+        });
+        sidebarContentY += lineGap + 8;
+    } else {
+        sidebarContentY += 8;
+    }
 
-    var plinthArea = parseFloat(document.getElementById('plinth').value) || 0;
-    var buildingType = document.getElementById('building_type').value.toUpperCase();
-    svgText(layerText, buildingType, areaLabelX, areaY + lineGap * 3 + 2, fs, {
-        className: 'editable', dataField: 'building_type'
-    });
-    svgText(layerText, 'PLINTH AREA', areaLabelX, areaY + lineGap * 4 + 2, fs, {});
-    svgText(layerText, ':', areaColonX, areaY + lineGap * 4 + 2, fs, {});
-    svgText(layerText, plinthArea.toFixed(2) + ' Sq.Fts.', areaValueX, areaY + lineGap * 4 + 2, fs, {
-        className: 'editable', dataField: 'plinth'
-    });
+    // SIGNATURE OF VENDOR/DEVELOPER/FIRM
+    svgText(layerText, 'SIGNATURE OF', sidebarX, sidebarContentY + fv, fv, { fontWeight: 'bold' });
+    svgText(layerText, 'VENDOR/DEVELOPER/FIRM', sidebarX, sidebarContentY + fv + fv + 4, fv, { fontWeight: 'bold' });
 
-    // Compass rose
-    var refBoxH = 110;
-    drawCompass(layerText, refBoxX + refBoxW - 30, refBoxY + refBoxH / 2, 14);
+    // ============================================================
+    // ZONE 3 - BOTTOM (Witnesses left, Vendee Signature right)
+    // ============================================================
+    var witY = zone3Top + 5;
 
-    // Signatures section (right)
-    var sigBoxX = refBoxX + refBoxW + footerGap;
-    var sigBoxY = refBoxY;
-    var sigBoxW = (PAGE_WIDTH - 30 - footerGap) * 0.45;
-
-    svgText(layerText, 'SIG. OF THE VENDOR', sigBoxX + sigBoxW / 2, sigBoxY + 8 + fv, fv, {
-        fontWeight: 'bold', textAnchor: 'middle'
-    });
-
-    var vSig1 = sigBoxY + 8 + fv + 10 + fs;
-    var vSig2 = vSig1 + lineGap + 4;
-    svgText(layerText, '1.', sigBoxX + 10, vSig1, fs, {});
-    svgText(layerText, '2.', sigBoxX + 10, vSig2, fs, {});
-
-    // Signature underlines
-    svgElem('line', { x1: sigBoxX + 20, y1: vSig1 + 3, x2: sigBoxX + sigBoxW - 10, y2: vSig1 + 3, stroke: '#000', 'stroke-width': 0.5 }, layerText);
-    svgElem('line', { x1: sigBoxX + 20, y1: vSig2 + 3, x2: sigBoxX + sigBoxW - 10, y2: vSig2 + 3, stroke: '#000', 'stroke-width': 0.5 }, layerText);
-
-    // Vendee signatures
-    var sepY = vSig2 + fs + 15;
-    svgText(layerText, 'SIG. OF THE VENDEES', sigBoxX + sigBoxW / 2, sepY + 6 + fv, fv, {
-        fontWeight: 'bold', textAnchor: 'middle'
-    });
-
-    var veSig1 = sepY + 6 + fv + 10 + fs;
-    var veSig2 = veSig1 + lineGap + 4;
-    svgText(layerText, '1.', sigBoxX + 10, veSig1, fs, {});
-    svgText(layerText, '2.', sigBoxX + 10, veSig2, fs, {});
-
-    svgElem('line', { x1: sigBoxX + 20, y1: veSig1 + 3, x2: sigBoxX + sigBoxW - 10, y2: veSig1 + 3, stroke: '#000', 'stroke-width': 0.5 }, layerText);
-    svgElem('line', { x1: sigBoxX + 20, y1: veSig2 + 3, x2: sigBoxX + sigBoxW - 10, y2: veSig2 + 3, stroke: '#000', 'stroke-width': 0.5 }, layerText);
-
-    // Witnesses
-    var refContentBottom = areaY + lineGap * 4 + 2 + fs + 4;
-    var sigContentBottom = veSig2 + fs + 6;
-    var witY = Math.max(refContentBottom, sigContentBottom) + 15;
-
-    svgText(layerText, 'WITNESSES', MARGIN + 15, witY + fv, fv, { fontWeight: 'bold' });
+    svgText(layerText, 'WITNESSES', MARGIN + 15, witY + fv, fv, { fontWeight: 'bold', textDecoration: 'underline' });
 
     var wit1 = document.getElementById('wit1').value;
     var wit2 = document.getElementById('wit2').value;
-    var witLine1 = witY + fv + 8 + fs;
-    var witLine2 = witLine1 + lineGap + 6;
+    var witLine1 = witY + fv + 10 + fs;
+    var witLine2 = witLine1 + lineGap + 8;
 
     svgText(layerText, '1. ' + wit1, MARGIN + 15, witLine1, fs, { className: 'editable', dataField: 'wit1' });
     svgText(layerText, '2. ' + wit2, MARGIN + 15, witLine2, fs, { className: 'editable', dataField: 'wit2' });
 
-    // Witness underlines
-    svgElem('line', { x1: MARGIN + 28, y1: witLine1 + 5, x2: MARGIN + 200, y2: witLine1 + 5, stroke: '#000', 'stroke-width': 0.5 }, layerText);
-    svgElem('line', { x1: MARGIN + 28, y1: witLine2 + 5, x2: MARGIN + 200, y2: witLine2 + 5, stroke: '#000', 'stroke-width': 0.5 }, layerText);
+    svgElem('line', { x1: MARGIN + 28, y1: witLine1 + 4, x2: MARGIN + 220, y2: witLine1 + 4, stroke: '#000', 'stroke-width': 0.5 }, layerText);
+    svgElem('line', { x1: MARGIN + 28, y1: witLine2 + 4, x2: MARGIN + 220, y2: witLine2 + 4, stroke: '#000', 'stroke-width': 0.5 }, layerText);
+
+    // SIGNATURE OF VENDEE (bottom-right)
+    svgText(layerText, 'SIGNATURE OF VENDEE', sidebarX, witY + fv, fv, { fontWeight: 'bold', textDecoration: 'underline' });
+    svgElem('line', { x1: sidebarX, y1: witLine1 + 4, x2: sidebarX + sidebarW, y2: witLine1 + 4, stroke: '#000', 'stroke-width': 0.5 }, layerText);
 }
 
 // ==================== PDF EXPORT (Vector, selectable text) ====================
@@ -2309,6 +2307,7 @@ function downloadPDF() {
 var fieldToSection = {
     title: 'sec-header',
     vendor: 'sec-header',
+    rep_by: 'sec-header',
     vendees: 'sec-header',
     north_txt: 'sec-boundaries',
     south_txt: 'sec-boundaries',
@@ -2431,6 +2430,7 @@ function collectFormData() {
         road_text: document.getElementById('road_text').value,
         title: document.getElementById('title').value,
         vendor: document.getElementById('vendor').value,
+        rep_by: document.getElementById('rep_by').value,
         vendees: document.getElementById('vendees').value,
         north_txt: document.getElementById('north_txt').value,
         south_txt: document.getElementById('south_txt').value,
@@ -2460,7 +2460,7 @@ function applyFormData(data) {
         if (data[id] !== undefined) document.getElementById(id).value = data[id];
     });
 
-    var textFields = ['road_direction','road_text','title','vendor','vendees',
+    var textFields = ['road_direction','road_text','title','vendor','rep_by','vendees',
         'north_txt','south_txt','east_txt','west_txt',
         'plot_center_txt','open_area_txt','building_type','plinth','wit1','wit2'];
     textFields.forEach(function(id) {
@@ -2687,6 +2687,7 @@ function newPlot() {
     document.getElementById('road_text').value = '( SOUTH ) ROAD';
     document.getElementById('title').value = '';
     document.getElementById('vendor').value = '';
+    document.getElementById('rep_by').value = '';
     document.getElementById('vendees').value = '';
     document.getElementById('north_txt').value = '';
     document.getElementById('south_txt').value = '';
