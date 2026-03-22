@@ -595,6 +595,25 @@
 var PIN_CODE = '4040';
 var pinEntry = '';
 
+// Supabase config
+var SUPABASE_URL = 'https://lrnadrqqpprphgmfbuuv.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_XUX5VIeRCR_OVBoqjiUc3w_Qar639er';
+
+function supabaseRequest(method, table, data, query) {
+    var url = SUPABASE_URL + '/rest/v1/' + table + (query || '');
+    var opts = {
+        method: method,
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Content-Type': 'application/json',
+            'Prefer': method === 'POST' ? 'return=representation' : ''
+        }
+    };
+    if (data) opts.body = JSON.stringify(data);
+    return fetch(url, opts).then(function(r) { return r.json(); });
+}
+
 // If already logged in, go to plot-choice
 if (localStorage.getItem('isLoggedIn') === 'true') {
     window.location.href = 'plot-choice.html';
@@ -626,15 +645,30 @@ function pinKey(digit) {
         }
 
         if (pinEntry === PIN_CODE) {
-            // Success — save session
+            // Success — save session locally
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('userName', name);
             localStorage.setItem('userPhone', phone);
-            localStorage.setItem('userEmail', name); // for display on plot-choice
-            window.location.href = 'plot-choice.html';
+            localStorage.setItem('userEmail', name);
+
+            // Log to both tables in Supabase
+            var loginData = { name: name, phone: phone, user_agent: navigator.userAgent };
+
+            // Log to logins table (every login event)
+            supabaseRequest('POST', 'logins', loginData);
+
+            // Log/update sessions table (unique user tracking)
+            supabaseRequest('POST', 'sessions', loginData)
+            .then(function(res) {
+                if (res && res[0] && res[0].id) {
+                    localStorage.setItem('sessionId', res[0].id);
+                }
+                window.location.href = 'plot-choice.html';
+            }).catch(function() {
+                window.location.href = 'plot-choice.html';
+            });
         } else {
             showError('Wrong PIN');
-            // Flash error on dots
             var boxes = document.querySelectorAll('.pin-dot-box');
             boxes.forEach(function(b) { b.classList.add('error'); });
             setTimeout(function() {
@@ -676,7 +710,6 @@ function showError(msg) {
 
 // Keyboard support
 document.addEventListener('keydown', function(e) {
-    // Don't capture keys when typing in name/phone fields
     if (document.activeElement.tagName === 'INPUT') return;
     if (e.key >= '0' && e.key <= '9') pinKey(e.key);
     else if (e.key === 'Backspace') pinBack();

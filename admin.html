@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RRD Planners - Admin</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #0d0d0d;
+        color: #fff;
+        min-height: 100vh;
+    }
+
+    /* PIN Lock Screen */
+    .pin-lock {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: #0d0d0d;
+        z-index: 5000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+    }
+
+    .pin-lock .logo {
+        font-size: 28px;
+        font-weight: 800;
+        color: #FFD93D;
+        font-style: italic;
+        margin-bottom: 4px;
+    }
+
+    .pin-lock .label {
+        color: #888;
+        font-size: 14px;
+    }
+
+    .pin-dots {
+        display: flex;
+        gap: 12px;
+        margin: 8px 0;
+    }
+
+    .pin-dot {
+        width: 44px;
+        height: 44px;
+        border: 2px solid #444;
+        border-radius: 10px;
+        background: #1a1a1a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 700;
+        color: #FFD93D;
+        transition: all 0.15s;
+    }
+
+    .pin-dot.filled {
+        border-color: #FFD93D;
+        background: #1e1e1e;
+    }
+
+    .pin-dot.error {
+        border-color: #e57373;
+        background: rgba(229,115,115,0.1);
+        animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-6px); }
+        75% { transform: translateX(6px); }
+    }
+
+    .pin-keypad {
+        display: grid;
+        grid-template-columns: repeat(3, 54px);
+        gap: 8px;
+        margin-top: 4px;
+    }
+
+    .pin-key {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        border: 1px solid #444;
+        background: #1a1a1a;
+        color: #fff;
+        font-size: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+
+    .pin-key:hover { border-color: #FFD93D; }
+    .pin-key:active { background: #333; }
+
+    .pin-error-msg {
+        color: #e57373;
+        font-size: 13px;
+        min-height: 18px;
+    }
+
+    /* Dashboard */
+    .dashboard { display: none; }
+
+    .header {
+        background: #111;
+        padding: 16px 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #222;
+    }
+
+    .header .logo {
+        font-size: 22px;
+        font-weight: 800;
+        color: #FFD93D;
+        font-style: italic;
+    }
+
+    .header .badge {
+        background: #FFD93D;
+        color: #1a1a1a;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .header-actions button {
+        padding: 8px 16px;
+        border: 1px solid #444;
+        background: #1a1a1a;
+        color: #ddd;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+
+    .header-actions button:hover {
+        border-color: #FFD93D;
+        color: #FFD93D;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        padding: 24px 32px;
+    }
+
+    .stat-card {
+        background: #1a1a1a;
+        border: 1px solid #222;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .stat-card .label {
+        color: #888;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #FFD93D;
+    }
+
+    .stat-card .sub {
+        color: #666;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    /* Tabs */
+    .tabs {
+        display: flex;
+        gap: 0;
+        padding: 0 32px;
+        border-bottom: 1px solid #222;
+    }
+
+    .tab {
+        padding: 12px 24px;
+        color: #888;
+        font-size: 14px;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        background: none;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        font-family: inherit;
+    }
+
+    .tab:hover { color: #ddd; }
+
+    .tab.active {
+        color: #FFD93D;
+        border-bottom-color: #FFD93D;
+    }
+
+    /* Table */
+    .table-wrap {
+        padding: 16px 32px;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    th {
+        text-align: left;
+        padding: 10px 12px;
+        color: #888;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #222;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #1a1a1a;
+        color: #ccc;
+        white-space: nowrap;
+    }
+
+    tr:hover td {
+        background: #141414;
+    }
+
+    .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .tag-mobile {
+        background: rgba(129,199,132,0.15);
+        color: #81c784;
+    }
+
+    .tag-desktop {
+        background: rgba(100,181,246,0.15);
+        color: #64b5f6;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #555;
+        font-size: 15px;
+    }
+
+    .json-cell {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+        color: #888;
+        font-size: 11px;
+    }
+
+    .json-cell:hover {
+        color: #FFD93D;
+    }
+
+    /* JSON Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.7);
+        z-index: 6000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-overlay.show {
+        display: flex;
+    }
+
+    .modal {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .modal h3 {
+        color: #FFD93D;
+        font-size: 16px;
+        margin-bottom: 12px;
+    }
+
+    .modal pre {
+        background: #111;
+        border: 1px solid #222;
+        border-radius: 8px;
+        padding: 16px;
+        color: #aaa;
+        font-size: 12px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+
+    .modal .close-btn {
+        margin-top: 12px;
+        padding: 8px 20px;
+        background: #FFD93D;
+        color: #1a1a1a;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    @media (max-width: 640px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); padding: 16px; gap: 10px; }
+        .stat-card .value { font-size: 24px; }
+        .table-wrap { padding: 8px; }
+        .tabs { padding: 0 16px; }
+        .header { padding: 12px 16px; }
+        .header .logo { font-size: 18px; }
+        th, td { padding: 8px 6px; font-size: 12px; }
+    }
+</style>
+</head>
+<body>
+
+<!-- PIN Lock -->
+<div class="pin-lock" id="pinLock">
+    <div class="logo">RRD Planners</div>
+    <div class="label">Enter Admin PIN</div>
+    <div class="pin-dots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-keypad">
+        <button class="pin-key" onclick="pinPress('1')">1</button>
+        <button class="pin-key" onclick="pinPress('2')">2</button>
+        <button class="pin-key" onclick="pinPress('3')">3</button>
+        <button class="pin-key" onclick="pinPress('4')">4</button>
+        <button class="pin-key" onclick="pinPress('5')">5</button>
+        <button class="pin-key" onclick="pinPress('6')">6</button>
+        <button class="pin-key" onclick="pinPress('7')">7</button>
+        <button class="pin-key" onclick="pinPress('8')">8</button>
+        <button class="pin-key" onclick="pinPress('9')">9</button>
+        <button class="pin-key" style="visibility:hidden;"></button>
+        <button class="pin-key" onclick="pinPress('0')">0</button>
+        <button class="pin-key" onclick="pinBackspace()" style="font-size:14px;color:#888;">&#x232B;</button>
+    </div>
+    <div class="pin-error-msg" id="pinError"></div>
+</div>
+
+<!-- Dashboard -->
+<div class="dashboard" id="dashboard">
+    <div class="header">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="logo">RRD Planners</div>
+            <span class="badge">Admin</span>
+        </div>
+        <div class="header-actions">
+            <button onclick="loadData()">Refresh</button>
+            <button onclick="window.location.href='plot-choice.html'">Back to App</button>
+        </div>
+    </div>
+
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div class="label">Total Logins</div>
+            <div class="value" id="statLogins">-</div>
+            <div class="sub">All time</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Unique Users</div>
+            <div class="value" id="statUsers">-</div>
+            <div class="sub">By phone number</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Today's Logins</div>
+            <div class="value" id="statToday">-</div>
+            <div class="sub" id="statTodayDate">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Sessions with Data</div>
+            <div class="value" id="statWithData">-</div>
+            <div class="sub">Plot data saved</div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('logins')">Login History</button>
+        <button class="tab" onclick="switchTab('sessions')">Sessions & Data</button>
+    </div>
+
+    <div class="table-wrap">
+        <div id="tabLogins">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Logged In</th>
+                        <th>Device</th>
+                    </tr>
+                </thead>
+                <tbody id="loginsBody"></tbody>
+            </table>
+        </div>
+        <div id="tabSessions" style="display:none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>First Seen</th>
+                        <th>Last Active</th>
+                        <th>Views</th>
+                        <th>Plot Data</th>
+                    </tr>
+                </thead>
+                <tbody id="sessionsBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- JSON Modal -->
+<div class="modal-overlay" id="jsonModal">
+    <div class="modal">
+        <h3>Plot Data</h3>
+        <pre id="jsonContent"></pre>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<script>
+var ADMIN_PIN = '4040';
+var SUPABASE_URL = 'https://lrnadrqqpprphgmfbuuv.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_XUX5VIeRCR_OVBoqjiUc3w_Qar639er';
+var pinEntry = '';
+
+// --- PIN ---
+function pinPress(d) {
+    if (pinEntry.length >= 4) return;
+    pinEntry += d;
+    updateDots();
+    if (pinEntry.length === 4) {
+        if (pinEntry === ADMIN_PIN) {
+            document.getElementById('pinLock').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            loadData();
+        } else {
+            document.getElementById('pinError').textContent = 'Wrong PIN';
+            var dots = document.querySelectorAll('.pin-dot');
+            dots.forEach(function(d) { d.classList.add('error'); });
+            setTimeout(function() {
+                pinEntry = '';
+                updateDots();
+                dots.forEach(function(d) { d.classList.remove('error'); });
+                document.getElementById('pinError').textContent = '';
+            }, 500);
+        }
+    }
+}
+
+function pinBackspace() {
+    pinEntry = pinEntry.slice(0, -1);
+    updateDots();
+}
+
+function updateDots() {
+    for (var i = 0; i < 4; i++) {
+        var dot = document.getElementById('pd' + i);
+        if (i < pinEntry.length) {
+            dot.textContent = '\u2022';
+            dot.classList.add('filled');
+        } else {
+            dot.textContent = '';
+            dot.classList.remove('filled');
+        }
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (document.getElementById('pinLock').style.display === 'none') return;
+    if (e.key >= '0' && e.key <= '9') pinPress(e.key);
+    else if (e.key === 'Backspace') pinBackspace();
+});
+
+// --- Supabase ---
+function sbFetch(table, query) {
+    return fetch(SUPABASE_URL + '/rest/v1/' + table + (query || ''), {
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY
+        }
+    }).then(function(r) { return r.json(); });
+}
+
+// --- Data ---
+var allLogins = [];
+var allSessions = [];
+
+function loadData() {
+    Promise.all([
+        sbFetch('logins', '?select=*&order=logged_in_at.desc'),
+        sbFetch('sessions', '?select=*&order=logged_in_at.desc')
+    ]).then(function(results) {
+        allLogins = results[0] || [];
+        allSessions = results[1] || [];
+        renderStats();
+        renderLogins();
+        renderSessions();
+    });
+}
+
+function renderStats() {
+    document.getElementById('statLogins').textContent = allLogins.length;
+
+    // Unique users by phone
+    var phones = {};
+    allLogins.forEach(function(l) { phones[l.phone] = true; });
+    document.getElementById('statUsers').textContent = Object.keys(phones).length;
+
+    // Today's logins
+    var today = new Date().toISOString().slice(0, 10);
+    var todayCount = allLogins.filter(function(l) {
+        return l.logged_in_at && l.logged_in_at.slice(0, 10) === today;
+    }).length;
+    document.getElementById('statToday').textContent = todayCount;
+    document.getElementById('statTodayDate').textContent = today;
+
+    // Sessions with plot data
+    var withData = allSessions.filter(function(s) { return s.plot_data; }).length;
+    document.getElementById('statWithData').textContent = withData;
+}
+
+function renderLogins() {
+    var tbody = document.getElementById('loginsBody');
+    if (!allLogins.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#555;padding:40px;">No logins yet</td></tr>';
+        return;
+    }
+    tbody.innerHTML = allLogins.map(function(l, i) {
+        var device = detectDevice(l.user_agent);
+        var time = formatDate(l.logged_in_at);
+        return '<tr>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td style="color:#fff;font-weight:500;">' + esc(l.name) + '</td>' +
+            '<td>' + esc(l.phone) + '</td>' +
+            '<td>' + time + '</td>' +
+            '<td><span class="tag ' + (device.mobile ? 'tag-mobile' : 'tag-desktop') + '">' + device.label + '</span></td>' +
+            '</tr>';
+    }).join('');
+}
+
+function renderSessions() {
+    var tbody = document.getElementById('sessionsBody');
+    if (!allSessions.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#555;padding:40px;">No sessions yet</td></tr>';
+        return;
+    }
+    tbody.innerHTML = allSessions.map(function(s, i) {
+        var firstSeen = formatDate(s.logged_in_at);
+        var lastActive = formatDate(s.last_active_at);
+        var dataCell = s.plot_data
+            ? '<td class="json-cell" onclick="showJson(' + i + ')">View JSON</td>'
+            : '<td style="color:#555;">-</td>';
+        return '<tr>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td style="color:#fff;font-weight:500;">' + esc(s.name) + '</td>' +
+            '<td>' + esc(s.phone) + '</td>' +
+            '<td>' + firstSeen + '</td>' +
+            '<td>' + lastActive + '</td>' +
+            '<td>' + (s.page_views || 1) + '</td>' +
+            dataCell +
+            '</tr>';
+    }).join('');
+}
+
+// --- Tabs ---
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    if (tab === 'logins') {
+        document.querySelectorAll('.tab')[0].classList.add('active');
+        document.getElementById('tabLogins').style.display = 'block';
+        document.getElementById('tabSessions').style.display = 'none';
+    } else {
+        document.querySelectorAll('.tab')[1].classList.add('active');
+        document.getElementById('tabLogins').style.display = 'none';
+        document.getElementById('tabSessions').style.display = 'block';
+    }
+}
+
+// --- JSON Modal ---
+function showJson(idx) {
+    var data = allSessions[idx].plot_data;
+    document.getElementById('jsonContent').textContent = JSON.stringify(data, null, 2);
+    document.getElementById('jsonModal').classList.add('show');
+}
+
+function closeModal() {
+    document.getElementById('jsonModal').classList.remove('show');
+}
+
+document.getElementById('jsonModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+// --- Helpers ---
+function formatDate(iso) {
+    if (!iso) return '-';
+    var d = new Date(iso);
+    var day = d.getDate().toString().padStart(2, '0');
+    var mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+    var yr = d.getFullYear();
+    var h = d.getHours();
+    var m = d.getMinutes().toString().padStart(2, '0');
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return day + ' ' + mon + ' ' + yr + ', ' + h + ':' + m + ' ' + ampm;
+}
+
+function detectDevice(ua) {
+    if (!ua) return { mobile: false, label: 'Unknown' };
+    if (/Mobile|Android|iPhone|iPad/i.test(ua)) return { mobile: true, label: 'Mobile' };
+    return { mobile: false, label: 'Desktop' };
+}
+
+function esc(str) {
+    if (!str) return '';
+    var d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+}
+</script>
+
+</body>
+</html>
