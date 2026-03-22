@@ -175,63 +175,6 @@
         color: #FFD93D;
     }
 
-    /* PIN Overlay */
-    .pin-overlay {
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: #1a1a1a;
-        z-index: 5000;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 20px;
-    }
-    .pin-overlay .logo { font-size: 32px; margin-bottom: 10px; }
-    .pin-label { color: #888; font-size: 15px; }
-    .pin-dots {
-        display: flex;
-        gap: 14px;
-        margin: 10px 0;
-    }
-    .pin-dot {
-        width: 18px; height: 18px;
-        border-radius: 50%;
-        border: 2px solid #555;
-        transition: all 0.15s;
-    }
-    .pin-dot.filled {
-        background: #FFD93D;
-        border-color: #FFD93D;
-    }
-    .pin-dot.error {
-        border-color: #e57373;
-        background: #e57373;
-    }
-    .pin-keypad {
-        display: grid;
-        grid-template-columns: repeat(3, 60px);
-        gap: 10px;
-        margin-top: 8px;
-    }
-    .pin-key {
-        width: 60px; height: 60px;
-        border-radius: 50%;
-        border: 1px solid #444;
-        background: #1e1e1e;
-        color: #fff;
-        font-size: 22px;
-        font-weight: 600;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.15s;
-    }
-    .pin-key:hover { border-color: #FFD93D; }
-    .pin-key:active { background: #333; }
-    .pin-key.backspace { font-size: 16px; color: #888; }
-
     @media (max-width: 500px) {
         .tpl-grid { grid-template-columns: 1fr; }
         .tpl-title { font-size: 22px; }
@@ -244,33 +187,7 @@
 </head>
 <body>
 
-<!-- PIN Entry Overlay -->
-<div class="pin-overlay" id="pinOverlay" style="display:none;">
-    <div class="logo">RRD Planners</div>
-    <div class="pin-label" id="pinLabel" data-en="Enter 4-digit PIN" data-te="4 అంకెల PIN నమోదు చేయండి">Enter 4-digit PIN</div>
-    <div class="pin-dots">
-        <div class="pin-dot" id="dot0"></div>
-        <div class="pin-dot" id="dot1"></div>
-        <div class="pin-dot" id="dot2"></div>
-        <div class="pin-dot" id="dot3"></div>
-    </div>
-    <div class="pin-keypad">
-        <button class="pin-key" onclick="pinPress('1')">1</button>
-        <button class="pin-key" onclick="pinPress('2')">2</button>
-        <button class="pin-key" onclick="pinPress('3')">3</button>
-        <button class="pin-key" onclick="pinPress('4')">4</button>
-        <button class="pin-key" onclick="pinPress('5')">5</button>
-        <button class="pin-key" onclick="pinPress('6')">6</button>
-        <button class="pin-key" onclick="pinPress('7')">7</button>
-        <button class="pin-key" onclick="pinPress('8')">8</button>
-        <button class="pin-key" onclick="pinPress('9')">9</button>
-        <button class="pin-key" style="visibility:hidden;"></button>
-        <button class="pin-key" onclick="pinPress('0')">0</button>
-        <button class="pin-key backspace" onclick="pinBackspace()">&#x232B;</button>
-    </div>
-</div>
-
-<div id="mainContent" style="display:none;">
+<div id="mainContent">
 <div class="header">
     <div class="logo">RRD Planners</div>
     <div class="header-right">
@@ -347,72 +264,27 @@
             <span id="continueText" data-en="Continue Current Plot" data-te="ప్రస్తుత ప్లాట్ కొనసాగించండి">Continue Current Plot</span>
         </button>
     </div>
+
+    <div class="tpl-divider"></div>
+
+    <div style="background:#1e1e1e;border:1px solid #333;border-radius:10px;padding:16px 20px;text-align:left;font-size:12px;color:#888;line-height:1.6;">
+        <p style="margin-bottom:10px;" data-en="This application is under development. Any issues encountered are understood and expected. We are not responsible for any mistakes in the generated plan PDF. By using this application, you accept these terms." data-te="ఈ అప్లికేషన్ డెవలప్‌మెంట్‌లో ఉంది. ఏవైనా సమస్యలు ఎదురైతే అవి అర్థమయ్యేవి మరియు ఊహించినవి. రూపొందించబడిన ప్లాన్ PDFలో ఏదైనా తప్పు ఉంటే మేము బాధ్యత వహించము. ఈ అప్లికేషన్‌ని ఉపయోగించడం ద్వారా, మీరు ఈ నిబంధనలను అంగీకరిస్తారు.">This application is under development. Any issues encountered are understood and expected. We are not responsible for any mistakes in the generated plan PDF. By using this application, you accept these terms.</p>
+        <p style="color:#FFD93D;" data-en="If you like this application and want to use more, talk to us at +91 79893 58436 - Sai Ram" data-te="ఈ అప్లికేషన్ మీకు నచ్చితే మరియు మరింత ఉపయోగించాలనుకుంటే, మమ్మల్ని సంప్రదించండి +91 79893 58436 - సాయి రామ్">If you like this application and want to use more, talk to us at +91 79893 58436 - Sai Ram</p>
+    </div>
 </div>
 
 </div><!-- end mainContent -->
 
 <script>
-// PIN system
-var PIN_CODE = '4040';
-var pinEntry = '';
-
-function pinPress(digit) {
-    if (pinEntry.length >= 4) return;
-    pinEntry += digit;
-    updateDots();
-    if (pinEntry.length === 4) {
-        if (pinEntry === PIN_CODE) {
-            // Success
-            localStorage.setItem('isLoggedIn', 'true');
-            document.getElementById('pinOverlay').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-        } else {
-            // Error — flash red, reset
-            var dots = document.querySelectorAll('.pin-dot');
-            dots.forEach(function(d) { d.classList.add('error'); });
-            setTimeout(function() {
-                pinEntry = '';
-                updateDots();
-                dots.forEach(function(d) { d.classList.remove('error'); });
-            }, 500);
-        }
-    }
+// Auth check — redirect to login if not logged in
+if (localStorage.getItem('isLoggedIn') !== 'true') {
+    window.location.href = 'login.html';
 }
 
-function pinBackspace() {
-    pinEntry = pinEntry.slice(0, -1);
-    updateDots();
-}
-
-function updateDots() {
-    for (var i = 0; i < 4; i++) {
-        var dot = document.getElementById('dot' + i);
-        dot.classList.toggle('filled', i < pinEntry.length);
-    }
-}
-
-// Keyboard support
-document.addEventListener('keydown', function(e) {
-    if (document.getElementById('pinOverlay').style.display === 'none') return;
-    if (e.key >= '0' && e.key <= '9') pinPress(e.key);
-    else if (e.key === 'Backspace') pinBackspace();
-});
-
-// Auth check — show PIN or main content
-var isLoggedIn = localStorage.getItem('isLoggedIn');
-if (isLoggedIn) {
-    document.getElementById('mainContent').style.display = 'block';
-} else {
-    document.getElementById('pinOverlay').style.display = 'flex';
-}
-
-// Show user email
-var userData = JSON.parse(localStorage.getItem('plotgen_user') || '{}');
-if (userData.email) {
-    document.getElementById('userEmail').textContent = userData.email;
-} else {
-    var email = localStorage.getItem('userEmail');
-    if (email) document.getElementById('userEmail').textContent = email;
+// Show user name
+var userName = localStorage.getItem('userName');
+if (userName) {
+    document.getElementById('userEmail').textContent = userName;
 }
 
 // Show "Continue" button only if there's existing plot data
