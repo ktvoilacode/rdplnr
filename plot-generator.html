@@ -102,6 +102,30 @@
         transform: translateY(-2px);
     }
 
+    /* Language Toggle */
+    .lang-toggle {
+        display: flex;
+        gap: 0;
+    }
+    .lang-btn {
+        padding: 5px 14px;
+        border: 1px solid #444;
+        background: #1e1e1e;
+        color: #888;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+    .lang-btn:first-child { border-radius: 6px 0 0 6px; }
+    .lang-btn:last-child { border-radius: 0 6px 6px 0; }
+    .lang-btn.active {
+        background: #FFD93D;
+        color: #1a1a1a;
+        border-color: #FFD93D;
+        font-weight: 600;
+    }
+
     /* History Panel (slide-down overlay) */
     .history-panel {
         display: none;
@@ -1045,6 +1069,10 @@
         <div class="logo">RRD Planners</div>
     </div>
     <div class="header-right">
+        <div class="lang-toggle">
+            <button class="lang-btn active" id="langEn" onclick="setLang('en')">English</button>
+            <button class="lang-btn" id="langTe" onclick="setLang('te')">తెలుగు</button>
+        </div>
         <span class="user-email" id="userEmail">user@email.com</span>
         <button class="header-btn" onclick="window.location.href='plot-choice.html'" title="New Plot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btn-label"> New</span></button>
         <button class="header-btn" id="historyBtn" onclick="toggleHistory()" title="History"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="btn-label"> History</span></button>
@@ -1087,7 +1115,7 @@
 <div class="main-container">
     <!-- Controls Panel -->
     <div class="controls-panel">
-        <h2>Plot Map Generator</h2>
+        <h2 data-en="Plot Map Generator" data-te="ప్లాట్ మ్యాప్ జనరేటర్">Plot Map Generator</h2>
 
         <!-- Plot Name -->
         <div class="plot-name-bar">
@@ -1098,23 +1126,23 @@
         <!-- 1. Header Info (Title, Vendor, Vendees) — maps to Zone 1 -->
         <div class="section open" id="sec-header">
             <div class="section-header" onclick="toggleSection('sec-header')">
-                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Header Info</h3>
+                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> <span data-en="Header Info" data-te="హెడర్ సమాచారం">Header Info</span></h3>
                 <span class="arrow">&#x25BC;</span>
             </div>
             <div class="section-body">
                 <div class="section-content">
-                    <label class="form-label">Title / Description</label>
+                    <label class="form-label" data-en="Title / Description" data-te="శీర్షిక / వివరణ">Title / Description</label>
                     <textarea id="title" placeholder="Enter plot title..." rows="3">PLAN SHOWING THE A.C.C ROOF HOUSE WITH OPEN PLACE BEARING G.W.M.C H.NO.31-1-85(PART), SITUATED AT KOMATIPALLY VILLAGE, HASANPARTHY MANDAL, HANUMAKONDA DISTRICT, WITHIN THE LIMITS OF GREATER WARANGAL MUNICIPAL CORPORATION.</textarea>
 
-                    <label class="form-label">Vendor Label</label>
+                    <label class="form-label" data-en="Vendor Label" data-te="విక్రేత లేబుల్">Vendor Label</label>
                     <input id="vendor_label" type="text" value="VENDOR">
-                    <label class="form-label">Vendor Data (one per line)</label>
+                    <label class="form-label" data-en="Vendor Data (one per line)" data-te="విక్రేత డేటా (ఒక్కో లైన్)">Vendor Data (one per line)</label>
                     <textarea id="vendor" rows="3">1) PADIDA VENKATALAXMI, W/o. AILAIAH @ PADIDELA ILAIAH</textarea>
 
                     <div style="border-top: 1px solid #333; margin: 10px 0;"></div>
-                    <label class="form-label">Vendee Label</label>
+                    <label class="form-label" data-en="Vendee Label" data-te="కొనుగోలుదారు లేబుల్">Vendee Label</label>
                     <input id="vendee_label" type="text" value="VENDEE">
-                    <label class="form-label">Vendee Data (one per line)</label>
+                    <label class="form-label" data-en="Vendee Data (one per line)" data-te="కొనుగోలుదారు డేటా (ఒక్కో లైన్)">Vendee Data (one per line)</label>
                     <textarea id="vendees" rows="2">1.PARDALA MOHAN, S/o. PARDALA MOGILI
 2.PADIDALA RAJINIKANTH, S/o. PADIDALA MOGILI</textarea>
                 </div>
@@ -1124,7 +1152,7 @@
         <!-- 2. Plot Shape & Dimensions — maps to Zone 2 -->
         <div class="section open" id="sec-dimensions">
             <div class="section-header" onclick="toggleSection('sec-dimensions')">
-                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M21 3H3v18h18V3z"/><path d="M9 3v18M3 9h18"/></svg> Plot Shape & Dimensions</h3>
+                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M21 3H3v18h18V3z"/><path d="M9 3v18M3 9h18"/></svg> <span data-en="Plot Shape & Dimensions" data-te="ప్లాట్ ఆకారం & కొలతలు">Plot Shape & Dimensions</span></h3>
                 <span class="arrow">&#x25BC;</span>
             </div>
             <div class="section-body">
@@ -1210,31 +1238,31 @@
         <!-- 3. Boundary Labels & Road — maps to sides around plot -->
         <div class="section" id="sec-boundaries">
             <div class="section-header" onclick="toggleSection('sec-boundaries')">
-                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M17 3l4 4-4 4"/><path d="M3 11h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 13H3"/></svg> Boundary Labels & Road</h3>
+                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M17 3l4 4-4 4"/><path d="M3 11h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 13H3"/></svg> <span data-en="Boundary Labels & Road" data-te="సరిహద్దు లేబుల్స్ & రోడ్డు">Boundary Labels & Road</span></h3>
                 <span class="arrow">&#x25BC;</span>
             </div>
             <div class="section-body">
                 <div class="section-content">
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
-                        <label class="form-label" style="margin:0;flex:1;">North Side</label>
+                        <label class="form-label" style="margin:0;flex:1;" data-en="North Side" data-te="ఉత్తరం వైపు">North Side</label>
                         <span style="font-size:11px;color:#888;">Road</span><label class="switch"><input type="checkbox" id="road_north" onchange="scheduleSave();drawMap()"><span class="slider"></span></label>
                     </div>
                     <textarea id="north_txt" rows="1">( SOUTH ) OPEN LAND OF PADIDELA THIRUPATHI</textarea>
 
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
-                        <label class="form-label" style="margin:0;flex:1;">South Side</label>
+                        <label class="form-label" style="margin:0;flex:1;" data-en="South Side" data-te="దక్షిణం వైపు">South Side</label>
                         <span style="font-size:11px;color:#888;">Road</span><label class="switch"><input type="checkbox" id="road_south" checked onchange="scheduleSave();drawMap()"><span class="slider"></span></label>
                     </div>
                     <textarea id="south_txt" rows="1">( NORTH ) ROAD</textarea>
 
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
-                        <label class="form-label" style="margin:0;flex:1;">East Side</label>
+                        <label class="form-label" style="margin:0;flex:1;" data-en="East Side" data-te="తూర్పు వైపు">East Side</label>
                         <span style="font-size:11px;color:#888;">Road</span><label class="switch"><input type="checkbox" id="road_east" onchange="scheduleSave();drawMap()"><span class="slider"></span></label>
                     </div>
                     <textarea id="east_txt" rows="2">( EAST ) H.NO.31-1-86 PART OF VENDOR SOLD TO PADIDELA SHEKAR & PADIDHLA SRINIVAS</textarea>
 
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
-                        <label class="form-label" style="margin:0;flex:1;">West Side</label>
+                        <label class="form-label" style="margin:0;flex:1;" data-en="West Side" data-te="పశ్చిమం వైపు">West Side</label>
                         <span style="font-size:11px;color:#888;">Road</span><label class="switch"><input type="checkbox" id="road_west" onchange="scheduleSave();drawMap()"><span class="slider"></span></label>
                     </div>
                     <textarea id="west_txt" rows="1">( WEST ) OPEN LAND OF OTHERS</textarea>
@@ -1245,12 +1273,12 @@
         <!-- 4. Plot Interior — room/open area inside plot -->
         <div class="section" id="sec-interior">
             <div class="section-header" onclick="toggleSection('sec-interior')">
-                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Plot Details</h3>
+                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> <span data-en="Plot Details" data-te="ప్లాట్ వివరాలు">Plot Details</span></h3>
                 <span class="arrow">&#x25BC;</span>
             </div>
             <div class="section-body">
                 <div class="section-content">
-                    <label class="form-label">Plot Label (center text)</label>
+                    <label class="form-label" data-en="Plot Label (center text)" data-te="ప్లాట్ లేబుల్ (మధ్య టెక్స్ట్)">Plot Label (center text)</label>
                     <input id="plot_center_txt" type="text" value="PLOT NO.32">
                     <input id="open_area_txt" type="hidden" value="">
                     <input id="showInterior" type="hidden" value="true">
@@ -1300,7 +1328,7 @@
         <!-- 5. Footer Details — signatures, witnesses, references (Zone 3) -->
         <div class="section" id="sec-footer">
             <div class="section-header" onclick="toggleSection('sec-footer')">
-                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Footer — Witnesses & Signatures</h3>
+                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> <span data-en="Footer — Witnesses & Signatures" data-te="ఫుటర్ — సాక్షులు & సంతకాలు">Footer — Witnesses & Signatures</span></h3>
                 <span class="arrow">&#x25BC;</span>
             </div>
             <div class="section-body">
@@ -1425,6 +1453,25 @@
         document.getElementById('userEmail').textContent = email;
     }
 })();
+
+// ==================== LANGUAGE TOGGLE ====================
+var currentLang = localStorage.getItem('rrd_lang') || 'en';
+
+function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('rrd_lang', lang);
+    applyLang();
+}
+
+function applyLang() {
+    document.getElementById('langEn').classList.toggle('active', currentLang === 'en');
+    document.getElementById('langTe').classList.toggle('active', currentLang === 'te');
+    var els = document.querySelectorAll('[data-' + currentLang + ']');
+    els.forEach(function(el) {
+        el.textContent = el.getAttribute('data-' + currentLang);
+    });
+}
+applyLang();
 
 // ==================== SUPABASE TRACKING ====================
 var SUPABASE_URL = 'https://lrnadrqqpprphgmfbuuv.supabase.co';

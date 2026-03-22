@@ -191,6 +191,10 @@
 <div class="header">
     <div class="logo">RRD Planners</div>
     <div class="header-right">
+        <div class="lang-toggle" style="margin-bottom:0;">
+            <button class="lang-btn active" id="langEn" onclick="setLang('en')">English</button>
+            <button class="lang-btn" id="langTe" onclick="setLang('te')">తెలుగు</button>
+        </div>
         <span class="user-email" id="userEmail">user@email.com</span>
         <button class="logout-btn" onclick="handleLogout()">Logout</button>
     </div>
@@ -199,11 +203,6 @@
 <div class="tpl-page">
     <h1 class="tpl-title" id="pageTitle">Plot Choice</h1>
     <p class="tpl-subtitle" id="pageSubtitle">Choose a plot type to get started</p>
-
-    <div class="lang-toggle">
-        <button class="lang-btn active" id="langEn" onclick="setLang('en')">English</button>
-        <button class="lang-btn" id="langTe" onclick="setLang('te')">తెలుగు</button>
-    </div>
 
     <div class="tpl-grid">
         <div class="tpl-card" onclick="selectTemplate('rectangle', false)">
