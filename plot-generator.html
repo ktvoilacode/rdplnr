@@ -1395,23 +1395,27 @@
                     <div class="control-row"><label>East</label><div class="btn-group"><button onclick="adjustSideOffset('E',-5)">-</button><span class="size-value" id="side_off_E">0</span><button onclick="adjustSideOffset('E',5)">+</button></div></div>
                     <div class="control-row"><label>West</label><div class="btn-group"><button onclick="adjustSideOffset('W',-5)">-</button><span class="size-value" id="side_off_W">0</span><button onclick="adjustSideOffset('W',5)">+</button></div></div>
 
-                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;" data-en="Compass Position" data-te="దిక్సూచి స్థానం">Compass Position</label>
-                    <div class="control-row">
-                        <label>Vertical</label>
-                        <div class="btn-group">
-                            <button onclick="adjustCompass('y', -10)">&#x25B2;</button>
-                            <span class="size-value" id="compass_y_val">0</span>
-                            <button onclick="adjustCompass('y', 10)">&#x25BC;</button>
-                        </div>
-                    </div>
-                    <div class="control-row">
-                        <label>Horizontal</label>
-                        <div class="btn-group">
-                            <button onclick="adjustCompass('x', -10)">&#x25C0;</button>
-                            <span class="size-value" id="compass_x_val">0</span>
-                            <button onclick="adjustCompass('x', 10)">&#x25B6;</button>
-                        </div>
-                    </div>
+                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;" data-en="Block Layout" data-te="బ్లాక్ లేఔట్">Block Layout</label>
+                    <p style="font-size:10px;color:#666;margin-bottom:8px;">Adjust position of each section on the PDF</p>
+
+                    <label class="form-label" style="font-size:11px;color:#FFD93D;margin-bottom:4px;">Header Block</label>
+                    <div class="control-row"><label>Y</label><div class="btn-group"><button onclick="adjustBlock('header','y',-5)">&#x25B2;</button><span class="size-value" id="blk_header_y">0</span><button onclick="adjustBlock('header','y',5)">&#x25BC;</button></div></div>
+
+                    <label class="form-label" style="font-size:11px;color:#FFD93D;margin-top:8px;margin-bottom:4px;">Diagram Block</label>
+                    <div class="control-row"><label>Y</label><div class="btn-group"><button onclick="adjustBlock('diagram','y',-5)">&#x25B2;</button><span class="size-value" id="blk_diagram_y">0</span><button onclick="adjustBlock('diagram','y',5)">&#x25BC;</button></div></div>
+                    <div class="control-row"><label>X</label><div class="btn-group"><button onclick="adjustBlock('diagram','x',-5)">&#x25C0;</button><span class="size-value" id="blk_diagram_x">0</span><button onclick="adjustBlock('diagram','x',5)">&#x25B6;</button></div></div>
+                    <div class="control-row"><label>Size</label><div class="btn-group"><button onclick="adjustBlock('diagram','s',-5)">-</button><span class="size-value" id="blk_diagram_s">0</span><button onclick="adjustBlock('diagram','s',5)">+</button></div></div>
+
+                    <label class="form-label" style="font-size:11px;color:#FFD93D;margin-top:8px;margin-bottom:4px;">References & Area Block</label>
+                    <div class="control-row"><label>Y</label><div class="btn-group"><button onclick="adjustBlock('area','y',-5)">&#x25B2;</button><span class="size-value" id="blk_area_y">0</span><button onclick="adjustBlock('area','y',5)">&#x25BC;</button></div></div>
+                    <div class="control-row"><label>X</label><div class="btn-group"><button onclick="adjustBlock('area','x',-5)">&#x25C0;</button><span class="size-value" id="blk_area_x">0</span><button onclick="adjustBlock('area','x',5)">&#x25B6;</button></div></div>
+
+                    <label class="form-label" style="font-size:11px;color:#FFD93D;margin-top:8px;margin-bottom:4px;">Compass</label>
+                    <div class="control-row"><label>Y</label><div class="btn-group"><button onclick="adjustBlock('compass','y',-10)">&#x25B2;</button><span class="size-value" id="blk_compass_y">0</span><button onclick="adjustBlock('compass','y',10)">&#x25BC;</button></div></div>
+                    <div class="control-row"><label>X</label><div class="btn-group"><button onclick="adjustBlock('compass','x',-10)">&#x25C0;</button><span class="size-value" id="blk_compass_x">0</span><button onclick="adjustBlock('compass','x',10)">&#x25B6;</button></div></div>
+
+                    <label class="form-label" style="font-size:11px;color:#FFD93D;margin-top:8px;margin-bottom:4px;">Witnesses & Signatures Block</label>
+                    <div class="control-row"><label>Y</label><div class="btn-group"><button onclick="adjustBlock('footer','y',-5)">&#x25B2;</button><span class="size-value" id="blk_footer_y">0</span><button onclick="adjustBlock('footer','y',5)">&#x25BC;</button></div></div>
                 </div>
             </div>
         </div>
@@ -1900,6 +1904,23 @@ function adjustBodySize(delta) {
 var compassOffset = { x: 0, y: 0 };
 var plotPosOffset = { x: 0, y: 0 };
 var plotScaleAdj = 0;
+
+// Block layout offsets
+var blockOffsets = {
+    header:  { x: 0, y: 0, s: 0 },
+    diagram: { x: 0, y: 0, s: 0 },
+    area:    { x: 0, y: 0, s: 0 },
+    compass: { x: 0, y: 0, s: 0 },
+    footer:  { x: 0, y: 0, s: 0 }
+};
+
+function adjustBlock(block, axis, delta) {
+    blockOffsets[block][axis] += delta;
+    var el = document.getElementById('blk_' + block + '_' + axis);
+    if (el) el.textContent = blockOffsets[block][axis];
+    scheduleSave();
+    scheduleDraw();
+}
 
 function adjustPlotPos(axis, delta) {
     plotPosOffset[axis] += delta;
@@ -2521,9 +2542,9 @@ function drawMap() {
     var area = calculateArea(T, B, H, isRect);
 
     // ============================================================
-    // ZONE 1 - HEADER
+    // ZONE 1 - HEADER (with block offset)
     // ============================================================
-    var zone1Top = MARGIN;
+    var zone1Top = MARGIN + (blockOffsets.header.y || 0);
 
     // Editable labels
     var vendorLabel = document.getElementById('vendor_label').value.toUpperCase() || 'VENDOR';
@@ -2586,14 +2607,14 @@ function drawMap() {
 
     // Compass rose (right side, aligned with vendor/vendee section)
     var compassCY = vendorY + (lastVendeeY - vendorY) / 2 + 5;
-    drawCompass(layerText, MARGIN + PAGE_WIDTH - 55 + compassOffset.x, compassCY + compassOffset.y, 22);
+    drawCompass(layerText, MARGIN + PAGE_WIDTH - 55 + (blockOffsets.compass.x || 0), compassCY + (blockOffsets.compass.y || 0), 22);
 
     // ============================================================
     // ZONE 2 - DRAWING (left 60%) | SIDEBAR (right 40%)
     // ============================================================
-    var zone2Top = lastVendeeY + 2;
+    var zone2Top = lastVendeeY + 2 + (blockOffsets.diagram.y || 0);
     var FOOTER_HEIGHT = 195;
-    var zone3Top = A4_HEIGHT - MARGIN - FOOTER_HEIGHT;
+    var zone3Top = A4_HEIGHT - MARGIN - FOOTER_HEIGHT + (blockOffsets.footer.y || 0);
     var zone2Height = zone3Top - zone2Top - 10;
 
     var PLOT_ZONE_WIDTH = PAGE_WIDTH * 0.6;
@@ -2601,11 +2622,12 @@ function drawMap() {
 
     var dimsOutside = document.getElementById('dims_outside').checked;
     var DRAW_MARGIN = 60 + textSizes.dimensions + textSizes.sidetext * 2;
-    if (dimsOutside) DRAW_MARGIN += 20; // extra space for extension lines
-    var DRAW_WIDTH = Math.min(300, PLOT_ZONE_WIDTH - 2 * DRAW_MARGIN);
-    var DRAW_HEIGHT = Math.min(350, zone2Height - 2 * DRAW_MARGIN);
+    if (dimsOutside) DRAW_MARGIN += 20;
+    var diagramScale = 1 + (blockOffsets.diagram.s || 0) / 100;
+    var DRAW_WIDTH = Math.min(300, PLOT_ZONE_WIDTH - 2 * DRAW_MARGIN) * diagramScale;
+    var DRAW_HEIGHT = Math.min(350, zone2Height - 2 * DRAW_MARGIN) * diagramScale;
 
-    var drawCenterX = MARGIN + PLOT_ZONE_WIDTH / 2 - 20 + plotPosOffset.x;
+    var drawCenterX = MARGIN + PLOT_ZONE_WIDTH / 2 - 20 + plotPosOffset.x + (blockOffsets.diagram.x || 0);
     var drawCenterY = zone2Top + DRAW_MARGIN + DRAW_HEIGHT / 2 + plotPosOffset.y;
 
     // ---- COORDINATE SYSTEM (Origin-based, bottom-left = 0,0) ----
@@ -2900,8 +2922,8 @@ function drawMap() {
     var fv = textSizes.vendor;
     var lineGap = fs + 5;
 
-    var sidebarX = MARGIN + PLOT_ZONE_WIDTH + 25;
-    var sidebarY = zone2Top + 60;
+    var sidebarX = MARGIN + PLOT_ZONE_WIDTH + 25 + (blockOffsets.area.x || 0);
+    var sidebarY = zone2Top + 60 + (blockOffsets.area.y || 0);
     var sidebarW = SIDEBAR_WIDTH - 10;
 
     // REFERENCES heading
@@ -2958,7 +2980,7 @@ function drawMap() {
     // ============================================================
     // ZONE 3 - BOTTOM (Witnesses left, Signatures right)
     // ============================================================
-    var witY = zone3Top + 5;
+    var witY = zone3Top + 5; // footer Y already includes blockOffsets.footer.y via zone3Top
 
     svgText(layerText, 'WITNESSES', MARGIN + PAD, witY + fv, fv, { fontWeight: 'bold', textDecoration: 'underline' });
 
@@ -3169,7 +3191,8 @@ function collectFormData() {
         plotPosOffset: { x: plotPosOffset.x, y: plotPosOffset.y },
         plotScaleAdj: plotScaleAdj,
         zoom: currentZoom,
-        textOverrides: JSON.parse(JSON.stringify(textOverrides))
+        textOverrides: JSON.parse(JSON.stringify(textOverrides)),
+        blockOffsets: JSON.parse(JSON.stringify(blockOffsets))
     };
 }
 
@@ -3253,6 +3276,18 @@ function applyFormData(data) {
         currentZoom = data.zoom;
         document.getElementById('zoom_value').textContent = currentZoom + '%';
         applyZoom();
+    }
+
+    if (data.blockOffsets) {
+        ['header','diagram','area','compass','footer'].forEach(function(blk) {
+            if (data.blockOffsets[blk]) {
+                blockOffsets[blk] = data.blockOffsets[blk];
+                ['x','y','s'].forEach(function(axis) {
+                    var el = document.getElementById('blk_' + blk + '_' + axis);
+                    if (el) el.textContent = blockOffsets[blk][axis] || 0;
+                });
+            }
+        });
     }
 
     updateModeUI();
@@ -3504,6 +3539,13 @@ function resetPlotDefaults() {
     compassOffset = { x: 0, y: 0 };
     sideOffsets = { N: 0, S: 0, E: 0, W: 0 };
     ['N','S','E','W'].forEach(function(s) { document.getElementById('side_off_' + s).textContent = '0'; });
+    blockOffsets = { header: {x:0,y:0,s:0}, diagram: {x:0,y:0,s:0}, area: {x:0,y:0,s:0}, compass: {x:0,y:0,s:0}, footer: {x:0,y:0,s:0} };
+    ['header','diagram','area','compass','footer'].forEach(function(blk) {
+        ['x','y','s'].forEach(function(axis) {
+            var el = document.getElementById('blk_' + blk + '_' + axis);
+            if (el) el.textContent = '0';
+        });
+    });
     plotPosOffset = { x: 0, y: 0 };
     plotScaleAdj = 0;
     document.getElementById('plot_pos_x').textContent = '0';
