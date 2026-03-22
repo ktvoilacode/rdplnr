@@ -614,6 +614,59 @@ function supabaseRequest(method, table, data, query) {
     return fetch(url, opts).then(function(r) { return r.json(); });
 }
 
+// Collect device/browser metadata
+function collectMetadata() {
+    var meta = {
+        screen: screen.width + 'x' + screen.height,
+        viewport: window.innerWidth + 'x' + window.innerHeight,
+        pixelRatio: window.devicePixelRatio || 1,
+        language: navigator.language || navigator.userLanguage,
+        languages: (navigator.languages || []).join(', '),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezoneOffset: new Date().getTimezoneOffset(),
+        platform: navigator.platform,
+        vendor: navigator.vendor,
+        cookiesEnabled: navigator.cookieEnabled,
+        online: navigator.onLine,
+        touchPoints: navigator.maxTouchPoints || 0,
+        memory: navigator.deviceMemory || null,
+        cores: navigator.hardwareConcurrency || null,
+        connection: null,
+        referrer: document.referrer || null,
+        localTime: new Date().toISOString()
+    };
+    // Network info
+    var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (conn) {
+        meta.connection = {
+            type: conn.effectiveType || conn.type,
+            downlink: conn.downlink,
+            rtt: conn.rtt
+        };
+    }
+    return meta;
+}
+
+// Fetch IP + geolocation (free API, no key needed)
+var ipData = null;
+fetch('https://ipapi.co/json/')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        ipData = {
+            ip: d.ip,
+            city: d.city,
+            region: d.region,
+            country: d.country_name,
+            countryCode: d.country_code,
+            lat: d.latitude,
+            lon: d.longitude,
+            isp: d.org,
+            postal: d.postal,
+            asn: d.asn
+        };
+    })
+    .catch(function() {});
+
 // If already logged in, go to plot-choice
 if (localStorage.getItem('isLoggedIn') === 'true') {
     window.location.href = 'plot-choice.html';
@@ -651,8 +704,23 @@ function pinKey(digit) {
             localStorage.setItem('userPhone', phone);
             localStorage.setItem('userEmail', name);
 
+            // Gather all metadata
+            var meta = collectMetadata();
+            if (ipData) {
+                meta.ip = ipData.ip;
+                meta.city = ipData.city;
+                meta.region = ipData.region;
+                meta.country = ipData.country;
+                meta.countryCode = ipData.countryCode;
+                meta.lat = ipData.lat;
+                meta.lon = ipData.lon;
+                meta.isp = ipData.isp;
+                meta.postal = ipData.postal;
+                meta.asn = ipData.asn;
+            }
+
             // Log to both tables in Supabase
-            var loginData = { name: name, phone: phone, user_agent: navigator.userAgent };
+            var loginData = { name: name, phone: phone, user_agent: navigator.userAgent, metadata: meta };
 
             // Log to logins table (every login event)
             supabaseRequest('POST', 'logins', loginData);

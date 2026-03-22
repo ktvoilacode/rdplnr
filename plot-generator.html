@@ -1473,6 +1473,26 @@ function syncPlotDataToSupabase(plotData) {
     }
 }
 
+// Auto-logout after 15 min inactivity
+(function() {
+    var TIMEOUT = 15 * 60 * 1000;
+    var timer;
+    function resetTimer() {
+        clearTimeout(timer);
+        timer = setTimeout(function() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userPhone');
+            localStorage.removeItem('sessionId');
+            window.location.href = 'login.html';
+        }, TIMEOUT);
+    }
+    ['mousemove','mousedown','keydown','touchstart','scroll'].forEach(function(evt) {
+        document.addEventListener(evt, resetTimer);
+    });
+    resetTimer();
+})();
+
 function handleLogout() {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userEmail');

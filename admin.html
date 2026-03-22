@@ -448,6 +448,9 @@
                         <th>Phone</th>
                         <th>Logged In</th>
                         <th>Device</th>
+                        <th>Location</th>
+                        <th>IP</th>
+                        <th>Info</th>
                     </tr>
                 </thead>
                 <tbody id="loginsBody"></tbody>
@@ -586,18 +589,24 @@ function renderStats() {
 function renderLogins() {
     var tbody = document.getElementById('loginsBody');
     if (!allLogins.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#555;padding:40px;">No logins yet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#555;padding:40px;">No logins yet</td></tr>';
         return;
     }
     tbody.innerHTML = allLogins.map(function(l, i) {
         var device = detectDevice(l.user_agent);
         var time = formatDate(l.logged_in_at);
+        var m = l.metadata || {};
+        var location = [m.city, m.region, m.countryCode].filter(Boolean).join(', ') || '-';
+        var ip = m.ip || '-';
         return '<tr>' +
             '<td>' + (i + 1) + '</td>' +
             '<td style="color:#fff;font-weight:500;">' + esc(l.name) + '</td>' +
             '<td>' + esc(l.phone) + '</td>' +
             '<td>' + time + '</td>' +
             '<td><span class="tag ' + (device.mobile ? 'tag-mobile' : 'tag-desktop') + '">' + device.label + '</span></td>' +
+            '<td>' + esc(location) + '</td>' +
+            '<td style="font-size:11px;color:#888;">' + esc(ip) + '</td>' +
+            '<td class="json-cell" onclick="showLoginMeta(' + i + ')">View</td>' +
             '</tr>';
     }).join('');
 }
@@ -644,6 +653,14 @@ function switchTab(tab) {
 function showJson(idx) {
     var data = allSessions[idx].plot_data;
     document.getElementById('jsonContent').textContent = JSON.stringify(data, null, 2);
+    document.querySelector('#jsonModal h3').textContent = 'Plot Data';
+    document.getElementById('jsonModal').classList.add('show');
+}
+
+function showLoginMeta(idx) {
+    var m = allLogins[idx].metadata || {};
+    document.getElementById('jsonContent').textContent = JSON.stringify(m, null, 2);
+    document.querySelector('#jsonModal h3').textContent = 'Login Metadata — ' + esc(allLogins[idx].name);
     document.getElementById('jsonModal').classList.add('show');
 }
 
