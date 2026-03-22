@@ -647,23 +647,25 @@ function collectMetadata() {
     return meta;
 }
 
-// Fetch IP + geolocation (free API, no key needed)
+// Fetch IP + geolocation (free HTTPS API)
 var ipData = null;
-fetch('https://ipapi.co/json/')
+fetch('https://ipwho.is/')
     .then(function(r) { return r.json(); })
     .then(function(d) {
-        ipData = {
-            ip: d.ip,
-            city: d.city,
-            region: d.region,
-            country: d.country_name,
-            countryCode: d.country_code,
-            lat: d.latitude,
-            lon: d.longitude,
-            isp: d.org,
-            postal: d.postal,
-            asn: d.asn
-        };
+        if (d.success) {
+            ipData = {
+                ip: d.ip,
+                city: d.city,
+                region: d.region,
+                country: d.country,
+                countryCode: d.country_code,
+                lat: d.latitude,
+                lon: d.longitude,
+                isp: d.connection && d.connection.isp,
+                postal: d.postal,
+                timezone: d.timezone && d.timezone.id
+            };
+        }
     })
     .catch(function() {});
 

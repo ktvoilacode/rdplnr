@@ -434,11 +434,29 @@
     </div>
 
     <div class="tabs">
+        <button class="tab" onclick="switchTab('users')">Users</button>
         <button class="tab active" onclick="switchTab('logins')">Login History</button>
         <button class="tab" onclick="switchTab('sessions')">Sessions & Data</button>
     </div>
 
     <div class="table-wrap">
+        <div id="tabUsers" style="display:none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Total Logins</th>
+                        <th>Plots Saved</th>
+                        <th>First Login</th>
+                        <th>Last Login</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody id="usersBody"></tbody>
+            </table>
+        </div>
         <div id="tabLogins">
             <table>
                 <thead>
@@ -560,6 +578,7 @@ function loadData() {
         allLogins = results[0] || [];
         allSessions = results[1] || [];
         renderStats();
+        renderUsers();
         renderLogins();
         renderSessions();
     });
@@ -584,6 +603,59 @@ function renderStats() {
     // Sessions with plot data
     var withData = allSessions.filter(function(s) { return s.plot_data; }).length;
     document.getElementById('statWithData').textContent = withData;
+}
+
+function renderUsers() {
+    var tbody = document.getElementById('usersBody');
+    // Group logins by phone
+    var grouped = {};
+    allLogins.forEach(function(l) {
+        if (!grouped[l.phone]) {
+            grouped[l.phone] = { name: l.name, phone: l.phone, count: 0, first: l.logged_in_at, last: l.logged_in_at, metadata: null };
+        }
+        grouped[l.phone].count++;
+        // Track first and last login
+        if (l.logged_in_at < grouped[l.phone].first) grouped[l.phone].first = l.logged_in_at;
+        if (l.logged_in_at > grouped[l.phone].last) grouped[l.phone].last = l.logged_in_at;
+        // Use latest name and metadata
+        if (l.logged_in_at === grouped[l.phone].last) {
+            grouped[l.phone].name = l.name;
+            if (l.metadata) grouped[l.phone].metadata = l.metadata;
+        }
+    });
+
+    // Count plots per phone from sessions
+    var plotCounts = {};
+    allSessions.forEach(function(s) {
+        if (s.plot_data) {
+            plotCounts[s.phone] = (plotCounts[s.phone] || 0) + 1;
+        }
+    });
+
+    var users = Object.values(grouped);
+    // Sort by total logins desc
+    users.sort(function(a, b) { return b.count - a.count; });
+
+    if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#555;padding:40px;">No users yet</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = users.map(function(u, i) {
+        var m = u.metadata || {};
+        var location = [m.city, m.region, m.countryCode].filter(Boolean).join(', ') || '-';
+        var plots = plotCounts[u.phone] || 0;
+        return '<tr>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td style="color:#fff;font-weight:500;">' + esc(u.name) + '</td>' +
+            '<td>' + esc(u.phone) + '</td>' +
+            '<td style="color:#FFD93D;font-weight:600;">' + u.count + '</td>' +
+            '<td>' + plots + '</td>' +
+            '<td>' + formatDate(u.first) + '</td>' +
+            '<td>' + formatDate(u.last) + '</td>' +
+            '<td>' + esc(location) + '</td>' +
+            '</tr>';
+    }).join('');
 }
 
 function renderLogins() {
@@ -638,13 +710,17 @@ function renderSessions() {
 // --- Tabs ---
 function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
-    if (tab === 'logins') {
+    document.getElementById('tabUsers').style.display = 'none';
+    document.getElementById('tabLogins').style.display = 'none';
+    document.getElementById('tabSessions').style.display = 'none';
+    if (tab === 'users') {
         document.querySelectorAll('.tab')[0].classList.add('active');
-        document.getElementById('tabLogins').style.display = 'block';
-        document.getElementById('tabSessions').style.display = 'none';
-    } else {
+        document.getElementById('tabUsers').style.display = 'block';
+    } else if (tab === 'logins') {
         document.querySelectorAll('.tab')[1].classList.add('active');
-        document.getElementById('tabLogins').style.display = 'none';
+        document.getElementById('tabLogins').style.display = 'block';
+    } else {
+        document.querySelectorAll('.tab')[2].classList.add('active');
         document.getElementById('tabSessions').style.display = 'block';
     }
 }
