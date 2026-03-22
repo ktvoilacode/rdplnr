@@ -1159,9 +1159,9 @@
                 <div class="section-content">
                     <div class="mode-toggle">
                         <input type="radio" name="plotMode" id="modeRect" value="rectangle" checked>
-                        <label for="modeRect">Rectangle</label>
+                        <label for="modeRect" data-en="Rectangle" data-te="దీర్ఘచతురస్రం">Rectangle</label>
                         <input type="radio" name="plotMode" id="modeTrap" value="trapezoid">
-                        <label for="modeTrap">Trapezoid</label>
+                        <label for="modeTrap" data-en="Trapezoid" data-te="ట్రెపెజాయిడ్">Trapezoid</label>
                     </div>
 
                     <div class="dim-grid">
@@ -1228,7 +1228,7 @@
                     </div>
 
                     <div class="toggle-row" style="margin-top: 10px;">
-                        <label class="form-label" style="margin-bottom:0">Dimensions Outside</label>
+                        <label class="form-label" style="margin-bottom:0" data-en="Dimensions Outside" data-te="బయట కొలతలు">Dimensions Outside</label>
                         <label class="switch"><input type="checkbox" id="dims_outside"><span class="slider"></span></label>
                     </div>
                 </div>
@@ -1284,12 +1284,12 @@
                     <input id="showInterior" type="hidden" value="true">
 
                     <div class="toggle-row" style="margin-top: 8px;">
-                        <label class="form-label" style="margin-bottom:0">Show Area in Plot</label>
+                        <label class="form-label" style="margin-bottom:0" data-en="Show Area in Plot" data-te="ప్లాట్‌లో విస్తీర్ణం చూపించు">Show Area in Plot</label>
                         <label class="switch"><input type="checkbox" id="show_area_in_plot"><span class="slider"></span></label>
                     </div>
 
                     <div class="toggle-row" style="margin-top: 8px;">
-                        <label class="form-label" style="margin-bottom:0">Show Room</label>
+                        <label class="form-label" style="margin-bottom:0" data-en="Show Room" data-te="గది చూపించు">Show Room</label>
                         <label class="switch"><input type="checkbox" id="show_room"><span class="slider"></span></label>
                     </div>
                     <div id="room_fields" style="display:none; margin-top: 8px;">
@@ -1349,12 +1349,12 @@
         <!-- 6. Display Settings -->
         <div class="section" id="sec-display">
             <div class="section-header" onclick="toggleSection('sec-display')">
-                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Display Settings</h3>
+                <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> <span data-en="Display Settings" data-te="ప్రదర్శన సెట్టింగ్‌లు">Display Settings</span></h3>
                 <span class="arrow">&#x25BC;</span>
             </div>
             <div class="section-body">
                 <div class="section-content">
-                    <label class="form-label" style="margin-bottom: 6px;">Preview Zoom</label>
+                    <label class="form-label" style="margin-bottom: 6px;" data-en="Preview Zoom" data-te="ప్రివ్యూ జూమ్">Preview Zoom</label>
                     <div class="control-row">
                         <label>Canvas Scale</label>
                         <div class="btn-group">
@@ -1365,7 +1365,7 @@
                         <button onclick="resetZoom()" style="font-size:10px; padding:4px 8px; border:1px solid #444; border-radius:4px; background:transparent; color:#888; cursor:pointer;">Reset</button>
                     </div>
 
-                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;">Text Sizes</label>
+                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;" data-en="Text Sizes" data-te="టెక్స్ట్ సైజులు">Text Sizes</label>
                     <div class="control-row">
                         <label>Title</label>
                         <div class="btn-group">
@@ -1383,19 +1383,19 @@
                         </div>
                     </div>
 
-                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;">Plot Position</label>
+                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;" data-en="Plot Position" data-te="ప్లాట్ స్థానం">Plot Position</label>
                     <div class="control-row"><label>Vertical</label><div class="btn-group"><button onclick="adjustPlotPos('y',-5)">&#x25B2;</button><span class="size-value" id="plot_pos_y">0</span><button onclick="adjustPlotPos('y',5)">&#x25BC;</button></div></div>
                     <div class="control-row"><label>Horizontal</label><div class="btn-group"><button onclick="adjustPlotPos('x',-5)">&#x25C0;</button><span class="size-value" id="plot_pos_x">0</span><button onclick="adjustPlotPos('x',5)">&#x25B6;</button></div></div>
 
                     <div class="control-row"><label>Size</label><div class="btn-group"><button onclick="adjustPlotScale(-5)">-</button><span class="size-value" id="plot_scale_val">0</span><button onclick="adjustPlotScale(5)">+</button></div></div>
 
-                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;">Side Label Offsets</label>
+                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;" data-en="Side Label Offsets" data-te="సైడ్ లేబుల్ ఆఫ్‌సెట్‌లు">Side Label Offsets</label>
                     <div class="control-row"><label>North</label><div class="btn-group"><button onclick="adjustSideOffset('N',-5)">-</button><span class="size-value" id="side_off_N">0</span><button onclick="adjustSideOffset('N',5)">+</button></div></div>
                     <div class="control-row"><label>South</label><div class="btn-group"><button onclick="adjustSideOffset('S',-5)">-</button><span class="size-value" id="side_off_S">0</span><button onclick="adjustSideOffset('S',5)">+</button></div></div>
                     <div class="control-row"><label>East</label><div class="btn-group"><button onclick="adjustSideOffset('E',-5)">-</button><span class="size-value" id="side_off_E">0</span><button onclick="adjustSideOffset('E',5)">+</button></div></div>
                     <div class="control-row"><label>West</label><div class="btn-group"><button onclick="adjustSideOffset('W',-5)">-</button><span class="size-value" id="side_off_W">0</span><button onclick="adjustSideOffset('W',5)">+</button></div></div>
 
-                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;">Compass Position</label>
+                    <label class="form-label" style="margin-top: 12px; margin-bottom: 6px;" data-en="Compass Position" data-te="దిక్సూచి స్థానం">Compass Position</label>
                     <div class="control-row">
                         <label>Vertical</label>
                         <div class="btn-group">
@@ -1417,8 +1417,8 @@
         </div>
 
         <div class="button-group">
-            <button class="btn-save" onclick="savePlot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Plot</button>
-            <button class="btn-pdf" onclick="downloadPDF()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF</button>
+            <button class="btn-save" onclick="savePlot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> <span data-en="Save Plot" data-te="ప్లాట్ సేవ్">Save Plot</span></button>
+            <button class="btn-pdf" onclick="downloadPDF()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> <span data-en="Download PDF" data-te="PDF డౌన్‌లోడ్">Download PDF</span></button>
         </div>
     </div>
 
