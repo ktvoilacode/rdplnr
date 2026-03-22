@@ -3591,22 +3591,52 @@ function applyTemplateFromUrl() {
 
     if (tpl.type === 'rectangle') {
         document.getElementById('modeRect').checked = true;
-        document.getElementById('n_ft').value = '40';
-        document.getElementById('s_ft').value = '40';
-        document.getElementById('e_ft').value = '20';
-        document.getElementById('w_ft').value = '20';
+        document.getElementById('n_ft').value = '30';
+        document.getElementById('n_in').value = '0';
+        document.getElementById('s_ft').value = '30';
+        document.getElementById('s_in').value = '0';
+        document.getElementById('e_ft').value = '50';
+        document.getElementById('e_in').value = '0';
+        document.getElementById('w_ft').value = '50';
+        document.getElementById('w_in').value = '0';
     } else {
         document.getElementById('modeTrap').checked = true;
-        document.getElementById('n_ft').value = '45';
-        document.getElementById('s_ft').value = '40';
-        document.getElementById('e_ft').value = '20';
-        document.getElementById('w_ft').value = '20';
+        document.getElementById('n_ft').value = '28';
+        document.getElementById('n_in').value = '6';
+        document.getElementById('s_ft').value = '32';
+        document.getElementById('s_in').value = '0';
+        document.getElementById('e_ft').value = '45';
+        document.getElementById('e_in').value = '0';
+        document.getElementById('w_ft').value = '46';
+        document.getElementById('w_in').value = '3';
     }
+
+    // Sample text data
+    document.getElementById('title').value = 'PLOT PLAN';
+    document.getElementById('vendor').value = 'Sri. Ramesh Kumar S/o Late. Venkataiah';
+    document.getElementById('vendees').value = 'Smt. Lakshmi Devi W/o Sri. Suresh Babu';
+    document.getElementById('vendor_label').value = 'VENDOR';
+    document.getElementById('vendee_label').value = 'VENDEE';
+    document.getElementById('north_txt').value = 'Plot No. 45\nSri. Narasimha Rao';
+    document.getElementById('south_txt').value = '30 Feet Road';
+    document.getElementById('east_txt').value = 'Plot No. 47\nSri. Venkat Reddy';
+    document.getElementById('west_txt').value = 'Plot No. 43\nSri. Srinivas';
+    document.getElementById('plot_center_txt').value = 'PLOT NO. 46';
+    document.getElementById('open_area_txt').value = 'OPEN AREA';
+    document.getElementById('building_type').value = 'R.C.C. ROOF';
+    document.getElementById('wit1').value = '1. Sri. Krishna Murthy';
+    document.getElementById('wit2').value = '2. Sri. Ravi Kumar';
+    document.getElementById('road_south').checked = true;
 
     if (tpl.withRoom) {
         document.getElementById('show_room').checked = true;
         document.getElementById('room_fields').style.display = 'block';
         document.getElementById('showInterior').value = 'true';
+        document.getElementById('room_label').value = 'ROOM';
+        document.getElementById('room_w_ft').value = '12';
+        document.getElementById('room_w_in').value = '0';
+        document.getElementById('room_h_ft').value = '10';
+        document.getElementById('room_h_in').value = '0';
     } else {
         document.getElementById('show_room').checked = false;
         document.getElementById('room_fields').style.display = 'none';
