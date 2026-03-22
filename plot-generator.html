@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>RRD Planers - Plot Generator</title>
+<title>RRD Planners - Plot Generator</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -762,8 +762,83 @@
     }
 
     #mapSvg text.editable:hover {
-        cursor: text;
+        cursor: pointer;
         fill: #0055aa;
+    }
+
+    /* Floating text adjust toolbar */
+    .text-adjust-bar {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        background: #1e1e1e;
+        border: 1px solid #FFD93D;
+        border-radius: 10px;
+        padding: 8px 10px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+        max-width: 260px;
+    }
+    .text-adjust-bar.show { display: flex; }
+    .ta-group {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+    .ta-label {
+        font-size: 10px;
+        color: #888;
+        min-width: 24px;
+    }
+    .ta-btn {
+        width: 26px;
+        height: 26px;
+        border: 1px solid #444;
+        border-radius: 5px;
+        background: #2a2a2a;
+        color: #ddd;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+        padding: 0;
+    }
+    .ta-btn:hover { border-color: #FFD93D; color: #FFD93D; }
+    .ta-btn:active { background: #333; }
+    .ta-sep {
+        width: 1px;
+        height: 20px;
+        background: #444;
+        margin: 0 2px;
+    }
+    .ta-close {
+        width: 22px;
+        height: 22px;
+        border: none;
+        border-radius: 50%;
+        background: #444;
+        color: #ddd;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+    }
+    .ta-close:hover { background: #e57373; color: #fff; }
+    .ta-field-name {
+        font-size: 10px;
+        color: #FFD93D;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     /* Edit overlay for inline editing */
@@ -962,12 +1037,16 @@
 </head>
 <body>
 
+
 <!-- Header -->
 <div class="header">
-    <div class="logo">RRD PLANERS</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+        <button class="header-btn" onclick="window.location.href='plot-choice.html'" title="Back to Plot Choice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="logo">RRD Planners</div>
+    </div>
     <div class="header-right">
         <span class="user-email" id="userEmail">user@email.com</span>
-        <button class="header-btn" onclick="newPlot()" title="New Plot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btn-label"> New</span></button>
+        <button class="header-btn" onclick="window.location.href='plot-choice.html'" title="New Plot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btn-label"> New</span></button>
         <button class="header-btn" id="historyBtn" onclick="toggleHistory()" title="History"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="btn-label"> History</span></button>
         <button class="logout-btn" onclick="handleLogout()">Logout</button>
     </div>
@@ -1407,7 +1486,8 @@ function saveFormData() {
         sideOffsets: { N: sideOffsets.N, S: sideOffsets.S, E: sideOffsets.E, W: sideOffsets.W },
         plotPosOffset: { x: plotPosOffset.x, y: plotPosOffset.y },
         plotScaleAdj: plotScaleAdj,
-        zoom: currentZoom
+        zoom: currentZoom,
+        textOverrides: textOverrides
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
@@ -1471,6 +1551,9 @@ function loadFormData() {
         if (data.plotScaleAdj !== undefined) {
             plotScaleAdj = data.plotScaleAdj || 0;
             document.getElementById('plot_scale_val').textContent = plotScaleAdj;
+        }
+        if (data.textOverrides) {
+            textOverrides = data.textOverrides;
         }
         if (data.dims_outside !== undefined) {
             document.getElementById('dims_outside').checked = data.dims_outside;
@@ -1719,6 +1802,10 @@ function adjustPlotScale(delta) {
 }
 var sideOffsets = { N: 0, S: 0, E: 0, W: 0 };
 
+// Per-text-field overrides: { fieldName: { dx: 0, dy: 0, ds: 0 } }
+var textOverrides = {};
+var taActiveField = null; // currently selected field for toolbar
+
 function adjustSideOffset(side, delta) {
     sideOffsets[side] += delta;
     document.getElementById('side_off_' + side).textContent = sideOffsets[side];
@@ -1889,6 +1976,17 @@ function svgWrapText(layer, text, x, y, maxWidth, lineHeight, fontSize, opts) {
 // Simple single-line SVG text
 function svgText(layer, text, x, y, fontSize, opts) {
     opts = opts || {};
+    var field = opts.dataField || '';
+
+    // Apply per-field overrides (position offset + font size delta)
+    if (field && textOverrides[field]) {
+        var ov = textOverrides[field];
+        x += (ov.dx || 0);
+        y += (ov.dy || 0);
+        fontSize += (ov.ds || 0);
+        if (fontSize < 3) fontSize = 3;
+    }
+
     var attrs = {
         x: x, y: y,
         'font-family': 'Arial, sans-serif',
@@ -1902,7 +2000,7 @@ function svgText(layer, text, x, y, fontSize, opts) {
     if (opts.textDecoration) attrs['text-decoration'] = opts.textDecoration;
     var el = svgElem('text', attrs, layer);
     if (opts.className) el.setAttribute('class', opts.className);
-    if (opts.dataField) el.setAttribute('data-field', opts.dataField);
+    if (field) el.setAttribute('data-field', field);
     el.textContent = text;
     return el;
 }
@@ -2531,35 +2629,66 @@ function drawMap() {
         var roomScaledH = roomH * scale;
         var roomLabel = document.getElementById('room_label').value || 'ROOM';
 
-        // Room at top-left corner with inset padding from edges
+        // Room at top-left corner with inset padding
+        // For trapezoids, compute safe left boundary at each Y level
         var roomPad = 15;
-        var roomX = canvasPts[3].x + roomPad;
         var roomY = canvasPts[3].y + roomPad;
+        var roomBottomY = roomY + roomScaledH;
+
+        // Left edge: interpolate from canvasPts[3](top-left) to canvasPts[0](bottom-left)
+        // Find leftmost X at roomY and roomBottomY, take the rightmost (most inward)
+        var leftTop = canvasPts[3], leftBot = canvasPts[0];
+        var leftEdgeH = leftBot.y - leftTop.y;
+        var leftXAtRoomTop = (leftEdgeH > 0) ? leftTop.x + (leftBot.x - leftTop.x) * ((roomY - leftTop.y) / leftEdgeH) : leftTop.x;
+        var leftXAtRoomBot = (leftEdgeH > 0) ? leftTop.x + (leftBot.x - leftTop.x) * ((roomBottomY - leftTop.y) / leftEdgeH) : leftTop.x;
+        var safeLeftX = Math.max(leftXAtRoomTop, leftXAtRoomBot) + roomPad;
+
+        // Right edge: interpolate from canvasPts[2](top-right) to canvasPts[1](bottom-right)
+        var rightTop = canvasPts[2], rightBot = canvasPts[1];
+        var rightEdgeH = rightBot.y - rightTop.y;
+        var rightXAtRoomTop = (rightEdgeH > 0) ? rightTop.x + (rightBot.x - rightTop.x) * ((roomY - rightTop.y) / rightEdgeH) : rightTop.x;
+        var rightXAtRoomBot = (rightEdgeH > 0) ? rightTop.x + (rightBot.x - rightTop.x) * ((roomBottomY - rightTop.y) / rightEdgeH) : rightTop.x;
+        var safeRightX = Math.min(rightXAtRoomTop, rightXAtRoomBot) - roomPad;
+
+        // Bottom edge: don't exceed bottom of plot
+        var plotBottomY = Math.max(canvasPts[0].y, canvasPts[1].y) - roomPad;
+
+        var roomX = safeLeftX;
+
+        // Clamp room width and height to stay inside plot
+        var maxRoomW = safeRightX - safeLeftX;
+        var maxRoomH = plotBottomY - roomY;
+        var clampedW = Math.min(roomScaledW, maxRoomW);
+        var clampedH = Math.min(roomScaledH, maxRoomH);
+        if (clampedW < 10) clampedW = 10;
+        if (clampedH < 10) clampedH = 10;
 
         // Outer rect
         svgElem('rect', {
-            x: roomX, y: roomY, width: roomScaledW, height: roomScaledH,
+            x: roomX, y: roomY, width: clampedW, height: clampedH,
             fill: 'none', stroke: '#000', 'stroke-width': 0.8
         }, layerPlot);
         // Inner rect (double line effect)
         var dbl = 3;
-        svgElem('rect', {
-            x: roomX + dbl, y: roomY + dbl, width: roomScaledW - 2 * dbl, height: roomScaledH - 2 * dbl,
-            fill: 'none', stroke: '#000', 'stroke-width': 0.8
-        }, layerPlot);
+        if (clampedW > 2 * dbl + 4 && clampedH > 2 * dbl + 4) {
+            svgElem('rect', {
+                x: roomX + dbl, y: roomY + dbl, width: clampedW - 2 * dbl, height: clampedH - 2 * dbl,
+                fill: 'none', stroke: '#000', 'stroke-width': 0.8
+            }, layerPlot);
+        }
 
         // Room label centered inside
-        svgText(layerPlot, roomLabel.toUpperCase(), roomX + roomScaledW / 2, roomY + roomScaledH / 2, textSizes.plotcenter - 2, {
+        svgText(layerPlot, roomLabel.toUpperCase(), roomX + clampedW / 2, roomY + clampedH / 2, textSizes.plotcenter - 2, {
             fontWeight: 'bold', textAnchor: 'middle', dominantBaseline: 'middle'
         });
 
         // Room dimension text
-        svgText(layerDimensions, ftStr(roomW), roomX + roomScaledW / 2, roomY + roomScaledH + 18, textSizes.dimensions - 1, {
+        svgText(layerDimensions, ftStr(roomW), roomX + clampedW / 2, roomY + clampedH + 18, textSizes.dimensions - 1, {
             textAnchor: 'middle'
         });
         svgText(layerDimensions, ftStr(roomH), 0, 0, textSizes.dimensions - 1, {
             textAnchor: 'middle',
-            transform: 'translate(' + (roomX + roomScaledW + 14) + ',' + (roomY + roomScaledH / 2) + ') rotate(-90)'
+            transform: 'translate(' + (roomX + clampedW + 14) + ',' + (roomY + clampedH / 2) + ') rotate(-90)'
         });
     }
 
@@ -2816,10 +2945,14 @@ var fieldToSection = {
         }, 300);
     }
 
-    // Desktop: dblclick
+    // Desktop: dblclick — show floating adjust toolbar
     svgEl.addEventListener('dblclick', function(e) {
         var target = e.target.closest('text.editable');
-        if (!target) return;
+        if (!target) { taClose(); return; }
+        var field = target.getAttribute('data-field');
+        if (field) {
+            taOpen(field, e.clientX, e.clientY);
+        }
         handleEditableTap(target);
     });
 
@@ -2921,7 +3054,8 @@ function collectFormData() {
         sideOffsets: { N: sideOffsets.N, S: sideOffsets.S, E: sideOffsets.E, W: sideOffsets.W },
         plotPosOffset: { x: plotPosOffset.x, y: plotPosOffset.y },
         plotScaleAdj: plotScaleAdj,
-        zoom: currentZoom
+        zoom: currentZoom,
+        textOverrides: JSON.parse(JSON.stringify(textOverrides))
     };
 }
 
@@ -2995,6 +3129,10 @@ function applyFormData(data) {
                 textSizes[key] = val;
             }
         }
+    }
+
+    if (data.textOverrides) {
+        textOverrides = data.textOverrides;
     }
 
     if (data.zoom) {
@@ -3165,6 +3303,7 @@ function loadPlot(id) {
             saveFormData();
             renderPlotList();
             toggleHistory(); // close panel after selection
+            goToEditor();
             return;
         }
     }
@@ -3183,8 +3322,15 @@ function deletePlot(id) {
 }
 
 function newPlot() {
-    if (!confirm('Start a new blank plot? (Current unsaved changes will be lost)')) return;
+    resetPlotDefaults();
+    setActivePlotId(null);
+    updateModeUI();
+    drawMap();
+    saveFormData();
+    renderPlotList();
+}
 
+function resetPlotDefaults() {
     // Set new plot name
     document.getElementById('plotName').value = 'Plot ' + getNextPlotNumber();
 
@@ -3248,12 +3394,7 @@ function newPlot() {
     document.getElementById('plot_scale_val').textContent = '0';
     document.getElementById('compass_x_val').textContent = '0';
     document.getElementById('compass_y_val').textContent = '0';
-
-    setActivePlotId(null);
-    updateModeUI();
-    drawMap();
-    saveFormData();
-    renderPlotList();
+    textOverrides = {};
 }
 
 function formatDate(isoStr) {
@@ -3301,6 +3442,147 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// ==================== TEXT ADJUST TOOLBAR ====================
+function taOpen(field, screenX, screenY) {
+    taActiveField = field;
+    var bar = document.getElementById('textAdjustBar');
+    var nameEl = document.getElementById('taFieldName');
+
+    // Friendly field name
+    var names = {
+        title: 'Title', vendor: 'Vendor', vendees: 'Vendees', vendor_label: 'Vendor Label',
+        vendee_label: 'Vendee Label', north_txt: 'North Side', south_txt: 'South Side',
+        east_txt: 'East Side', west_txt: 'West Side', plot_center_txt: 'Plot Label',
+        building_type: 'Building Type', plinth: 'Plinth', wit1: 'Witness 1', wit2: 'Witness 2',
+        sig_label_1: 'Signature 1', sig_label_2: 'Signature 2'
+    };
+    nameEl.textContent = names[field] || field;
+
+    bar.classList.add('show');
+
+    // Position near the click but keep in viewport
+    var bw = 260, bh = 80;
+    var px = Math.min(screenX + 10, window.innerWidth - bw - 10);
+    var py = Math.max(screenY - bh - 10, 10);
+    bar.style.left = px + 'px';
+    bar.style.top = py + 'px';
+}
+
+function taClose() {
+    document.getElementById('textAdjustBar').classList.remove('show');
+    taActiveField = null;
+}
+
+// Close toolbar when clicking outside it or the SVG
+document.addEventListener('mousedown', function(e) {
+    var bar = document.getElementById('textAdjustBar');
+    if (!bar.classList.contains('show')) return;
+    if (bar.contains(e.target)) return;
+    if (e.target.closest('#mapSvg')) return;
+    taClose();
+});
+
+function taMove(dx, dy) {
+    if (!taActiveField) return;
+    if (!textOverrides[taActiveField]) textOverrides[taActiveField] = { dx: 0, dy: 0, ds: 0 };
+    textOverrides[taActiveField].dx += dx;
+    textOverrides[taActiveField].dy += dy;
+    scheduleSave();
+    scheduleDraw();
+}
+
+function taSize(ds) {
+    if (!taActiveField) return;
+    if (!textOverrides[taActiveField]) textOverrides[taActiveField] = { dx: 0, dy: 0, ds: 0 };
+    textOverrides[taActiveField].ds += ds;
+    scheduleSave();
+    scheduleDraw();
+}
+
+function taReset() {
+    if (!taActiveField) return;
+    delete textOverrides[taActiveField];
+    scheduleSave();
+    scheduleDraw();
+}
+
+// ==================== APPLY TEMPLATE FROM PLOT-CHOICE ====================
+function applyTemplateFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('template') !== 'new') return false;
+
+    var tpl = JSON.parse(localStorage.getItem('rrd_template') || 'null');
+    if (!tpl) return false;
+
+    localStorage.removeItem('rrd_template');
+
+    // Reset and apply template
+    resetPlotDefaults();
+
+    if (tpl.type === 'rectangle') {
+        document.getElementById('modeRect').checked = true;
+        document.getElementById('n_ft').value = '40';
+        document.getElementById('s_ft').value = '40';
+        document.getElementById('e_ft').value = '20';
+        document.getElementById('w_ft').value = '20';
+    } else {
+        document.getElementById('modeTrap').checked = true;
+        document.getElementById('n_ft').value = '45';
+        document.getElementById('s_ft').value = '40';
+        document.getElementById('e_ft').value = '20';
+        document.getElementById('w_ft').value = '20';
+    }
+
+    if (tpl.withRoom) {
+        document.getElementById('show_room').checked = true;
+        document.getElementById('room_fields').style.display = 'block';
+        document.getElementById('showInterior').value = 'true';
+    } else {
+        document.getElementById('show_room').checked = false;
+        document.getElementById('room_fields').style.display = 'none';
+    }
+
+    // Save template type for visibility
+    localStorage.setItem('rrd_active_template', JSON.stringify(tpl));
+
+    setActivePlotId(null);
+    updateModeUI();
+    applyTemplateVisibility(tpl);
+
+    // Clean URL
+    window.history.replaceState({}, '', 'plot-generator.html');
+    return true;
+}
+
+function applyTemplateVisibility(tpl) {
+    if (!tpl) return;
+    var isRect = tpl.type === 'rectangle';
+    var hasRoom = tpl.withRoom;
+
+    // Hide mode toggle — already chosen on plot-choice page
+    document.querySelector('.mode-toggle').style.display = 'none';
+
+    // Sync hint only for rectangle
+    var syncHint = document.getElementById('syncHint');
+    if (syncHint) syncHint.style.display = isRect ? 'block' : 'none';
+
+    // Trapezoid alignment controls — only for trapezoid (shown dynamically by updateModeUI)
+    // For rectangle, force-hide them
+    if (isRect) {
+        document.getElementById('trapAlignHRow').style.display = 'none';
+        document.getElementById('trapAlignVRow').style.display = 'none';
+        document.getElementById('trapHelpNote').style.display = 'none';
+    }
+
+    // Room toggle — hide if template doesn't include room, show if it does
+    var roomToggleRow = document.getElementById('show_room').closest('.toggle-row');
+    if (roomToggleRow) roomToggleRow.style.display = hasRoom ? 'flex' : 'none';
+    if (!hasRoom) {
+        document.getElementById('room_fields').style.display = 'none';
+        document.getElementById('show_room').checked = false;
+    }
+}
+
 // ==================== INITIALIZATION ====================
 window.addEventListener('load', function() {
     var restored = loadFormData();
@@ -3324,10 +3606,25 @@ window.addEventListener('load', function() {
         document.getElementById('plotName').value = 'Plot ' + getNextPlotNumber();
     }
 
+    // Sync user email
+    var userData = JSON.parse(localStorage.getItem('plotgen_user') || '{}');
+    if (userData.email) {
+        document.getElementById('userEmail').textContent = userData.email;
+    }
+
+    // Check if coming from plot-choice with a new template
+    var templateApplied = applyTemplateFromUrl();
+
     updateModeUI();
     initBodySizeDisplay();
     drawMap();
     saveFormData();
+
+    // Apply template visibility (from URL or saved)
+    if (!templateApplied) {
+        var savedTpl = JSON.parse(localStorage.getItem('rrd_active_template') || 'null');
+        if (savedTpl) applyTemplateVisibility(savedTpl);
+    }
 
     // Mobile: default to controls tab, hide preview
     if (window.innerWidth <= 1024) {
@@ -3469,6 +3766,27 @@ function closeTrapHelp() {
             <strong style="color:#FFD93D;">Tip:</strong> These options only appear when dimensions differ. If N=S, width alignment is hidden. If E=W, height alignment is hidden. In Rectangle mode, both are hidden.
         </div>
     </div>
+</div>
+
+<!-- Floating Text Adjust Toolbar -->
+<div class="text-adjust-bar" id="textAdjustBar">
+    <div class="ta-field-name" id="taFieldName">—</div>
+    <div class="ta-group">
+        <span class="ta-label">Pos</span>
+        <button class="ta-btn" onclick="taMove(0,-2)" title="Up">&#x25B2;</button>
+        <button class="ta-btn" onclick="taMove(0,2)" title="Down">&#x25BC;</button>
+        <button class="ta-btn" onclick="taMove(-2,0)" title="Left">&#x25C0;</button>
+        <button class="ta-btn" onclick="taMove(2,0)" title="Right">&#x25B6;</button>
+    </div>
+    <div class="ta-sep"></div>
+    <div class="ta-group">
+        <span class="ta-label">Size</span>
+        <button class="ta-btn" onclick="taSize(-0.5)" title="Smaller">A&#x2212;</button>
+        <button class="ta-btn" onclick="taSize(0.5)" title="Larger">A+</button>
+    </div>
+    <div class="ta-sep"></div>
+    <button class="ta-btn" onclick="taReset()" title="Reset" style="font-size:10px;">RST</button>
+    <button class="ta-close" onclick="taClose()" title="Close">&times;</button>
 </div>
 
 </body>

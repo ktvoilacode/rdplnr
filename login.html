@@ -667,7 +667,7 @@ async function hashCredentials(email, password) {
 
 (function() {
     if (localStorage.getItem('isLoggedIn') === 'true') {
-        window.location.href = 'plot-generator.html';
+        window.location.href = 'plot-choice.html';
     }
 })();
 
@@ -689,7 +689,7 @@ async function handleLogin(event) {
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('userEmail', email);
         localStorage.setItem('userRole', user.role);
-        window.location.href = 'plot-generator.html';
+        window.location.href = 'plot-choice.html';
     } else {
         btn.classList.remove('loading');
         btn.textContent = 'Sign in';

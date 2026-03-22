@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RRD Planners - Plot Choice</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #1a1a1a;
+        min-height: 100vh;
+        color: #fff;
+    }
+
+    .header {
+        background: #0d0d0d;
+        padding: 15px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #333;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .logo {
+        font-size: 24px;
+        font-weight: bold;
+        color: #FFD93D;
+        font-style: italic;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .user-email {
+        color: #888;
+        font-size: 14px;
+        margin-right: 8px;
+    }
+
+    .logout-btn {
+        padding: 8px 16px;
+        background: #FFD93D;
+        color: #1a1a1a;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+        background: #ffc107;
+        transform: translateY(-2px);
+    }
+
+    /* Language Toggle */
+    .lang-toggle {
+        display: flex;
+        justify-content: center;
+        gap: 0;
+        margin-bottom: 28px;
+    }
+    .lang-btn {
+        padding: 8px 24px;
+        border: 1px solid #444;
+        background: #1e1e1e;
+        color: #888;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .lang-btn:first-child { border-radius: 8px 0 0 8px; }
+    .lang-btn:last-child { border-radius: 0 8px 8px 0; }
+    .lang-btn.active {
+        background: #FFD93D;
+        color: #1a1a1a;
+        border-color: #FFD93D;
+        font-weight: 600;
+    }
+
+    .tpl-page {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        text-align: center;
+    }
+
+    .tpl-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #FFD93D;
+        margin-bottom: 6px;
+    }
+
+    .tpl-subtitle {
+        color: #888;
+        font-size: 15px;
+        margin-bottom: 28px;
+    }
+
+    .tpl-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .tpl-card {
+        background: #1e1e1e;
+        border: 2px solid #333;
+        border-radius: 12px;
+        padding: 24px 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+
+    .tpl-card:hover {
+        border-color: #FFD93D;
+        background: #252520;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(255,217,61,0.1);
+    }
+
+    .tpl-card h3 {
+        color: #fff;
+        font-size: 16px;
+        margin: 12px 0 4px;
+    }
+
+    .tpl-card p {
+        color: #888;
+        font-size: 12px;
+    }
+
+    .tpl-icon {
+        display: flex;
+        justify-content: center;
+    }
+
+    .tpl-divider {
+        border-top: 1px solid #333;
+        margin: 24px 0;
+    }
+
+    .tpl-section-title {
+        font-size: 16px;
+        color: #aaa;
+        margin-bottom: 12px;
+    }
+
+    .tpl-recent-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: #1e1e1e;
+        border: 1px solid #444;
+        border-radius: 8px;
+        color: #ddd;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .tpl-recent-btn:hover {
+        border-color: #FFD93D;
+        color: #FFD93D;
+    }
+
+    /* PIN Overlay */
+    .pin-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: #1a1a1a;
+        z-index: 5000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+    }
+    .pin-overlay .logo { font-size: 32px; margin-bottom: 10px; }
+    .pin-label { color: #888; font-size: 15px; }
+    .pin-dots {
+        display: flex;
+        gap: 14px;
+        margin: 10px 0;
+    }
+    .pin-dot {
+        width: 18px; height: 18px;
+        border-radius: 50%;
+        border: 2px solid #555;
+        transition: all 0.15s;
+    }
+    .pin-dot.filled {
+        background: #FFD93D;
+        border-color: #FFD93D;
+    }
+    .pin-dot.error {
+        border-color: #e57373;
+        background: #e57373;
+    }
+    .pin-keypad {
+        display: grid;
+        grid-template-columns: repeat(3, 60px);
+        gap: 10px;
+        margin-top: 8px;
+    }
+    .pin-key {
+        width: 60px; height: 60px;
+        border-radius: 50%;
+        border: 1px solid #444;
+        background: #1e1e1e;
+        color: #fff;
+        font-size: 22px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+    }
+    .pin-key:hover { border-color: #FFD93D; }
+    .pin-key:active { background: #333; }
+    .pin-key.backspace { font-size: 16px; color: #888; }
+
+    @media (max-width: 500px) {
+        .tpl-grid { grid-template-columns: 1fr; }
+        .tpl-title { font-size: 22px; }
+        .header { padding: 12px 16px; }
+        .logo { font-size: 18px; }
+        .pin-key { width: 52px; height: 52px; font-size: 20px; }
+        .pin-keypad { grid-template-columns: repeat(3, 52px); gap: 8px; }
+    }
+</style>
+</head>
+<body>
+
+<!-- PIN Entry Overlay -->
+<div class="pin-overlay" id="pinOverlay" style="display:none;">
+    <div class="logo">RRD Planners</div>
+    <div class="pin-label" id="pinLabel" data-en="Enter 4-digit PIN" data-te="4 అంకెల PIN నమోదు చేయండి">Enter 4-digit PIN</div>
+    <div class="pin-dots">
+        <div class="pin-dot" id="dot0"></div>
+        <div class="pin-dot" id="dot1"></div>
+        <div class="pin-dot" id="dot2"></div>
+        <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="pin-keypad">
+        <button class="pin-key" onclick="pinPress('1')">1</button>
+        <button class="pin-key" onclick="pinPress('2')">2</button>
+        <button class="pin-key" onclick="pinPress('3')">3</button>
+        <button class="pin-key" onclick="pinPress('4')">4</button>
+        <button class="pin-key" onclick="pinPress('5')">5</button>
+        <button class="pin-key" onclick="pinPress('6')">6</button>
+        <button class="pin-key" onclick="pinPress('7')">7</button>
+        <button class="pin-key" onclick="pinPress('8')">8</button>
+        <button class="pin-key" onclick="pinPress('9')">9</button>
+        <button class="pin-key" style="visibility:hidden;"></button>
+        <button class="pin-key" onclick="pinPress('0')">0</button>
+        <button class="pin-key backspace" onclick="pinBackspace()">&#x232B;</button>
+    </div>
+</div>
+
+<div id="mainContent" style="display:none;">
+<div class="header">
+    <div class="logo">RRD Planners</div>
+    <div class="header-right">
+        <span class="user-email" id="userEmail">user@email.com</span>
+        <button class="logout-btn" onclick="handleLogout()">Logout</button>
+    </div>
+</div>
+
+<div class="tpl-page">
+    <h1 class="tpl-title" id="pageTitle">Plot Choice</h1>
+    <p class="tpl-subtitle" id="pageSubtitle">Choose a plot type to get started</p>
+
+    <div class="lang-toggle">
+        <button class="lang-btn active" id="langEn" onclick="setLang('en')">English</button>
+        <button class="lang-btn" id="langTe" onclick="setLang('te')">తెలుగు</button>
+    </div>
+
+    <div class="tpl-grid">
+        <div class="tpl-card" onclick="selectTemplate('rectangle', false)">
+            <div class="tpl-icon">
+                <svg viewBox="0 0 120 90" width="120" height="90">
+                    <rect x="10" y="10" width="100" height="70" fill="none" stroke="#FFD93D" stroke-width="2.5"/>
+                    <text x="60" y="50" text-anchor="middle" fill="#888" font-size="11">40 x 20</text>
+                </svg>
+            </div>
+            <h3 class="t-title" data-en="Regular Shape" data-te="సాధారణ ఆకారం">Regular Shape</h3>
+            <p class="t-desc" data-en="Square or Rectangle plot" data-te="చతురస్రం లేదా దీర్ఘచతురస్రం ప్లాట్">Square or Rectangle plot</p>
+        </div>
+
+        <div class="tpl-card" onclick="selectTemplate('rectangle', true)">
+            <div class="tpl-icon">
+                <svg viewBox="0 0 120 90" width="120" height="90">
+                    <rect x="10" y="10" width="100" height="70" fill="none" stroke="#FFD93D" stroke-width="2.5"/>
+                    <rect x="16" y="16" width="35" height="28" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="3,2"/>
+                    <text x="33" y="33" text-anchor="middle" fill="#666" font-size="8">Room</text>
+                    <text x="60" y="65" text-anchor="middle" fill="#888" font-size="11">40 x 20</text>
+                </svg>
+            </div>
+            <h3 class="t-title" data-en="Regular Shape + Room" data-te="సాధారణ ఆకారం + గది">Regular Shape + Room</h3>
+            <p class="t-desc" data-en="Square or Rectangle with room inside" data-te="లోపల గదితో చతురస్రం లేదా దీర్ఘచతురస్రం">Square or Rectangle with room inside</p>
+        </div>
+
+        <div class="tpl-card" onclick="selectTemplate('trapezoid', false)">
+            <div class="tpl-icon">
+                <svg viewBox="0 0 120 90" width="120" height="90">
+                    <polygon points="25,10 105,10 110,80 10,80" fill="none" stroke="#FFD93D" stroke-width="2.5"/>
+                    <text x="60" y="50" text-anchor="middle" fill="#888" font-size="11">&#8800;</text>
+                </svg>
+            </div>
+            <h3 class="t-title" data-en="Irregular Shape" data-te="అసమాన ఆకారం">Irregular Shape</h3>
+            <p class="t-desc" data-en="Different sides - not equal" data-te="వేరు వేరు కొలతలు - సమానం కాదు">Different sides - not equal</p>
+        </div>
+
+        <div class="tpl-card" onclick="selectTemplate('trapezoid', true)">
+            <div class="tpl-icon">
+                <svg viewBox="0 0 120 90" width="120" height="90">
+                    <polygon points="25,10 105,10 110,80 10,80" fill="none" stroke="#FFD93D" stroke-width="2.5"/>
+                    <rect x="30" y="18" width="28" height="22" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="3,2"/>
+                    <text x="44" y="32" text-anchor="middle" fill="#666" font-size="8">Room</text>
+                    <text x="65" y="60" text-anchor="middle" fill="#888" font-size="11">&#8800;</text>
+                </svg>
+            </div>
+            <h3 class="t-title" data-en="Irregular Shape + Room" data-te="అసమాన ఆకారం + గది">Irregular Shape + Room</h3>
+            <p class="t-desc" data-en="Different sides with room inside" data-te="లోపల గదితో అసమాన కొలతలు">Different sides with room inside</p>
+        </div>
+    </div>
+
+    <div class="tpl-divider"></div>
+
+    <h2 class="tpl-section-title" id="continueSection" style="display:none;" data-en="Or continue editing" data-te="లేదా ఎడిటింగ్ కొనసాగించండి">Or continue editing</h2>
+    <div id="continueBtn" style="display:none;">
+        <button class="tpl-recent-btn" onclick="goToEditor()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+            <span id="continueText" data-en="Continue Current Plot" data-te="ప్రస్తుత ప్లాట్ కొనసాగించండి">Continue Current Plot</span>
+        </button>
+    </div>
+</div>
+
+</div><!-- end mainContent -->
+
+<script>
+// PIN system
+var PIN_CODE = '4040';
+var pinEntry = '';
+
+function pinPress(digit) {
+    if (pinEntry.length >= 4) return;
+    pinEntry += digit;
+    updateDots();
+    if (pinEntry.length === 4) {
+        if (pinEntry === PIN_CODE) {
+            // Success
+            localStorage.setItem('isLoggedIn', 'true');
+            document.getElementById('pinOverlay').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        } else {
+            // Error — flash red, reset
+            var dots = document.querySelectorAll('.pin-dot');
+            dots.forEach(function(d) { d.classList.add('error'); });
+            setTimeout(function() {
+                pinEntry = '';
+                updateDots();
+                dots.forEach(function(d) { d.classList.remove('error'); });
+            }, 500);
+        }
+    }
+}
+
+function pinBackspace() {
+    pinEntry = pinEntry.slice(0, -1);
+    updateDots();
+}
+
+function updateDots() {
+    for (var i = 0; i < 4; i++) {
+        var dot = document.getElementById('dot' + i);
+        dot.classList.toggle('filled', i < pinEntry.length);
+    }
+}
+
+// Keyboard support
+document.addEventListener('keydown', function(e) {
+    if (document.getElementById('pinOverlay').style.display === 'none') return;
+    if (e.key >= '0' && e.key <= '9') pinPress(e.key);
+    else if (e.key === 'Backspace') pinBackspace();
+});
+
+// Auth check — show PIN or main content
+var isLoggedIn = localStorage.getItem('isLoggedIn');
+if (isLoggedIn) {
+    document.getElementById('mainContent').style.display = 'block';
+} else {
+    document.getElementById('pinOverlay').style.display = 'flex';
+}
+
+// Show user email
+var userData = JSON.parse(localStorage.getItem('plotgen_user') || '{}');
+if (userData.email) {
+    document.getElementById('userEmail').textContent = userData.email;
+} else {
+    var email = localStorage.getItem('userEmail');
+    if (email) document.getElementById('userEmail').textContent = email;
+}
+
+// Show "Continue" button only if there's existing plot data
+var hasData = localStorage.getItem('plotgen_formData') || localStorage.getItem('plotgen_activePlotId');
+if (hasData) {
+    document.getElementById('continueSection').style.display = 'block';
+    document.getElementById('continueBtn').style.display = 'block';
+}
+
+// Language
+var currentLang = localStorage.getItem('rrd_lang') || 'en';
+
+function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('rrd_lang', lang);
+    applyLang();
+}
+
+function applyLang() {
+    document.getElementById('langEn').classList.toggle('active', currentLang === 'en');
+    document.getElementById('langTe').classList.toggle('active', currentLang === 'te');
+
+    // Page title and subtitle
+    var titles = { en: 'Plot Choice', te: 'ప్లాట్ ఎంపిక' };
+    var subtitles = { en: 'Choose a plot type to get started', te: 'ప్రారంభించడానికి ప్లాట్ రకాన్ని ఎంచుకోండి' };
+    document.getElementById('pageTitle').textContent = titles[currentLang];
+    document.getElementById('pageSubtitle').textContent = subtitles[currentLang];
+
+    // All translatable elements
+    var els = document.querySelectorAll('[data-' + currentLang + ']');
+    els.forEach(function(el) {
+        el.textContent = el.getAttribute('data-' + currentLang);
+    });
+}
+
+applyLang();
+
+function handleLogout() {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userRole');
+    window.location.href = 'login.html';
+}
+
+function selectTemplate(type, withRoom) {
+    localStorage.setItem('rrd_template', JSON.stringify({ type: type, withRoom: withRoom }));
+    window.location.href = 'plot-generator.html?template=new';
+}
+
+function goToEditor() {
+    window.location.href = 'plot-generator.html';
+}
+</script>
+
+</body>
+</html>
