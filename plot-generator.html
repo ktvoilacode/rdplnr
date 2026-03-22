@@ -3749,26 +3749,54 @@ function applyTemplateVisibility(tpl) {
     var hasRoom = tpl.withRoom;
 
     // Hide mode toggle — already chosen on plot-choice page
-    document.querySelector('.mode-toggle').style.display = 'none';
+    var modeToggle = document.querySelector('.mode-toggle');
+    if (modeToggle) modeToggle.style.display = 'none';
 
     // Sync hint only for rectangle
     var syncHint = document.getElementById('syncHint');
     if (syncHint) syncHint.style.display = isRect ? 'block' : 'none';
 
-    // Trapezoid alignment controls — only for trapezoid (shown dynamically by updateModeUI)
-    // For rectangle, force-hide them
+    // For rectangle: hide all trapezoid-specific controls
     if (isRect) {
         document.getElementById('trapAlignHRow').style.display = 'none';
         document.getElementById('trapAlignVRow').style.display = 'none';
+        document.getElementById('trapCustomHRow').style.display = 'none';
+        document.getElementById('trapCustomVRow').style.display = 'none';
         document.getElementById('trapHelpNote').style.display = 'none';
     }
 
-    // Room toggle — hide if template doesn't include room, show if it does
+    // Room toggle — hide if template doesn't include room
     var roomToggleRow = document.getElementById('show_room').closest('.toggle-row');
     if (roomToggleRow) roomToggleRow.style.display = hasRoom ? 'flex' : 'none';
     if (!hasRoom) {
         document.getElementById('room_fields').style.display = 'none';
         document.getElementById('show_room').checked = false;
+    } else {
+        document.getElementById('show_room').checked = true;
+        document.getElementById('room_fields').style.display = 'block';
+    }
+
+    // For rectangle without room — simplify dimensions section
+    // Hide E/W labels showing "same as N/S" if rectangle
+    if (isRect) {
+        // In rectangle mode, N=S and E=W are synced, so dimensions already show correctly
+    }
+
+    // Add a visual indicator showing which template is active
+    var templateBadge = document.getElementById('templateBadge');
+    if (!templateBadge) {
+        var h2 = document.querySelector('.controls-panel h2');
+        if (h2) {
+            templateBadge = document.createElement('span');
+            templateBadge.id = 'templateBadge';
+            templateBadge.style.cssText = 'display:inline-block;font-size:11px;background:#FFD93D;color:#1a1a1a;padding:2px 10px;border-radius:12px;margin-left:8px;font-weight:600;vertical-align:middle;';
+            h2.appendChild(templateBadge);
+        }
+    }
+    if (templateBadge) {
+        var label = isRect ? 'Regular' : 'Irregular';
+        if (hasRoom) label += ' + Room';
+        templateBadge.textContent = label;
     }
 }
 
