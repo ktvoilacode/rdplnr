@@ -117,7 +117,6 @@
         border: 2px solid #333;
         border-radius: 12px;
         padding: 24px 16px;
-        cursor: pointer;
         transition: all 0.2s ease;
         text-align: center;
     }
@@ -138,6 +137,36 @@
     .tpl-card p {
         color: #888;
         font-size: 12px;
+    }
+
+    .tpl-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .tpl-action-btn {
+        border: 1px solid #444;
+        border-radius: 8px;
+        background: #1a1a1a;
+        color: #ddd;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 8px 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .tpl-action-btn:hover {
+        border-color: #FFD93D;
+        color: #FFD93D;
+    }
+
+    .tpl-action-btn.sample {
+        background: rgba(255, 217, 61, 0.08);
+        border-color: #7c6920;
+        color: #FFD93D;
     }
 
     .tpl-icon {
@@ -178,8 +207,38 @@
     @media (max-width: 500px) {
         .tpl-grid { grid-template-columns: 1fr; }
         .tpl-title { font-size: 22px; }
-        .header { padding: 12px 16px; }
-        .logo { font-size: 18px; }
+        .header {
+            padding: 10px 12px;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        .logo { font-size: 18px; line-height: 1.1; }
+        .header-right {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: nowrap;
+        }
+        .lang-toggle {
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+        .lang-btn {
+            padding: 5px 8px;
+            font-size: 11px;
+        }
+        .logout-btn {
+            min-height: 30px;
+            padding: 6px 10px;
+            font-size: 11px;
+            flex: 1 1 0;
+            border-radius: 6px;
+        }
+        .header > .logo {
+            align-self: flex-start;
+        }
         .pin-key { width: 52px; height: 52px; font-size: 20px; }
         .pin-keypad { grid-template-columns: repeat(3, 52px); gap: 8px; }
     }
@@ -205,7 +264,7 @@
     <p class="tpl-subtitle" id="pageSubtitle">Choose a plot type to get started</p>
 
     <div class="tpl-grid">
-        <div class="tpl-card" onclick="selectTemplate('rectangle', false)">
+        <div class="tpl-card">
             <div class="tpl-icon">
                 <svg viewBox="0 0 120 90" width="120" height="90">
                     <rect x="10" y="10" width="100" height="70" fill="none" stroke="#FFD93D" stroke-width="2.5"/>
@@ -214,9 +273,13 @@
             </div>
             <h3 class="t-title" data-en="Regular Shape" data-te="సాధారణ ఆకారం">Regular Shape</h3>
             <p class="t-desc" data-en="Square or Rectangle plot" data-te="చతురస్రం లేదా దీర్ఘచతురస్రం ప్లాట్">Square or Rectangle plot</p>
+            <div class="tpl-actions">
+                <button class="tpl-action-btn" onclick="selectTemplate('rectangle', false, 'empty')" data-en="Start Blank" data-te="ఖాళీగా ప్రారంభించండి">Start Blank</button>
+                <button class="tpl-action-btn sample" onclick="selectTemplate('rectangle', false, 'sample')" data-en="Use Sample Data" data-te="ఉదాహరణ డేటా ఉపయోగించండి">Use Sample Data</button>
+            </div>
         </div>
 
-        <div class="tpl-card" onclick="selectTemplate('rectangle', true)">
+        <div class="tpl-card">
             <div class="tpl-icon">
                 <svg viewBox="0 0 120 90" width="120" height="90">
                     <rect x="10" y="10" width="100" height="70" fill="none" stroke="#FFD93D" stroke-width="2.5"/>
@@ -227,9 +290,13 @@
             </div>
             <h3 class="t-title" data-en="Regular Shape + Room" data-te="సాధారణ ఆకారం + గది">Regular Shape + Room</h3>
             <p class="t-desc" data-en="Square or Rectangle with room inside" data-te="లోపల గదితో చతురస్రం లేదా దీర్ఘచతురస్రం">Square or Rectangle with room inside</p>
+            <div class="tpl-actions">
+                <button class="tpl-action-btn" onclick="selectTemplate('rectangle', true, 'empty')" data-en="Start Blank" data-te="ఖాళీగా ప్రారంభించండి">Start Blank</button>
+                <button class="tpl-action-btn sample" onclick="selectTemplate('rectangle', true, 'sample')" data-en="Use Sample Data" data-te="ఉదాహరణ డేటా ఉపయోగించండి">Use Sample Data</button>
+            </div>
         </div>
 
-        <div class="tpl-card" onclick="selectTemplate('trapezoid', false)">
+        <div class="tpl-card">
             <div class="tpl-icon">
                 <svg viewBox="0 0 120 90" width="120" height="90">
                     <polygon points="25,10 105,10 110,80 10,80" fill="none" stroke="#FFD93D" stroke-width="2.5"/>
@@ -238,9 +305,13 @@
             </div>
             <h3 class="t-title" data-en="Irregular Shape" data-te="అసమాన ఆకారం">Irregular Shape</h3>
             <p class="t-desc" data-en="Different sides - not equal" data-te="వేరు వేరు కొలతలు - సమానం కాదు">Different sides - not equal</p>
+            <div class="tpl-actions">
+                <button class="tpl-action-btn" onclick="selectTemplate('trapezoid', false, 'empty')" data-en="Start Blank" data-te="ఖాళీగా ప్రారంభించండి">Start Blank</button>
+                <button class="tpl-action-btn sample" onclick="selectTemplate('trapezoid', false, 'sample')" data-en="Use Sample Data" data-te="ఉదాహరణ డేటా ఉపయోగించండి">Use Sample Data</button>
+            </div>
         </div>
 
-        <div class="tpl-card" onclick="selectTemplate('trapezoid', true)">
+        <div class="tpl-card">
             <div class="tpl-icon">
                 <svg viewBox="0 0 120 90" width="120" height="90">
                     <polygon points="25,10 105,10 110,80 10,80" fill="none" stroke="#FFD93D" stroke-width="2.5"/>
@@ -251,6 +322,10 @@
             </div>
             <h3 class="t-title" data-en="Irregular Shape + Room" data-te="అసమాన ఆకారం + గది">Irregular Shape + Room</h3>
             <p class="t-desc" data-en="Different sides with room inside" data-te="లోపల గదితో అసమాన కొలతలు">Different sides with room inside</p>
+            <div class="tpl-actions">
+                <button class="tpl-action-btn" onclick="selectTemplate('trapezoid', true, 'empty')" data-en="Start Blank" data-te="ఖాళీగా ప్రారంభించండి">Start Blank</button>
+                <button class="tpl-action-btn sample" onclick="selectTemplate('trapezoid', true, 'sample')" data-en="Use Sample Data" data-te="ఉదాహరణ డేటా ఉపయోగించండి">Use Sample Data</button>
+            </div>
         </div>
     </div>
 
@@ -348,9 +423,12 @@ function handleLogout() {
     window.location.href = 'login.html';
 }
 
-function selectTemplate(type, withRoom) {
-    localStorage.setItem('rrd_template', JSON.stringify({ type: type, withRoom: withRoom }));
-    window.location.href = 'plot-generator.html?template=new';
+function selectTemplate(type, withRoom, contentMode) {
+    var mode = contentMode === 'empty' ? 'empty' : 'sample';
+    var tpl = { type: type, withRoom: withRoom, contentMode: mode };
+    localStorage.setItem('rrd_template', JSON.stringify(tpl));
+    var roomFlag = withRoom ? '1' : '0';
+    window.location.href = 'plot-generator.html?template=new&type=' + encodeURIComponent(type) + '&room=' + roomFlag + '&content=' + mode;
 }
 
 function goToEditor() {
